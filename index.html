@@ -109,7 +109,7 @@ table.grid td.n{text-align:right}
 #tip{position:absolute;pointer-events:none;background:var(--fg);color:var(--bg);font-family:var(--f-mono);font-size:12px;padding:3px 7px;border-radius:4px;white-space:nowrap;transform:translate(12px,12px)}
 /* details window */
 #panel{position:absolute;z-index:4;top:12px;right:12px;bottom:12px;width:min(430px,calc(100% - 24px));background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:0}
-#memberWin{position:absolute;z-index:5;inset:12px;display:grid;grid-template-columns:minmax(0,1fr) min(430px,42%);background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);overflow:hidden;min-height:0}
+#memberWin{position:absolute;z-index:5;inset:60px 12px 12px 12px;display:grid;grid-template-columns:minmax(0,1fr) min(430px,42%);background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);overflow:hidden;min-height:0}
 .mv-left{position:relative;min-width:0;min-height:0;background:var(--stage)}
 #mvStage{position:absolute;inset:0}
 #mvStage canvas{display:block;touch-action:none}
@@ -138,6 +138,42 @@ table.grid td.n{text-align:right}
 .dmain .dt{font-weight:500}
 .dmain .dl{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dhist{margin:0;padding-left:18px;font-size:12px;color:var(--muted)}
+#elemView{position:absolute;inset:0;z-index:2;display:grid;grid-template-columns:300px minmax(0,1fr);background:var(--surface);min-height:0}
+.ev-pick{display:flex;flex-direction:column;gap:8px;padding:60px 12px 12px;border-right:1px solid var(--line);min-height:0;background:var(--surface)}
+.ev-pick input,.ev-pick select{border:1px solid var(--line);border-radius:5px;padding:6px 8px;background:var(--surface-2);font-size:13px;width:100%}
+.evlist{list-style:none;margin:0;padding:0;overflow:auto;flex:1;min-height:0;display:flex;flex-direction:column;gap:2px}
+.evi{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;width:100%;padding:6px;border-radius:5px}
+.evi:hover{background:var(--surface-2)}.evi.on{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.evi:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.evt{min-width:0;display:flex;flex-direction:column}.evt .mono{font-size:12px}.evt .t{color:var(--muted);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ev-main{overflow:auto;min-height:0;min-width:0}
+.ev-main.none .ev-top{display:none}
+.ev-top{display:grid;grid-template-columns:minmax(0,1fr) 300px;height:min(460px,62vh);border-bottom:1px solid var(--line)}
+.ev-3d{position:relative;min-width:0;min-height:0}
+.ev-3d .mv-left{position:absolute;inset:0}
+.ev-3d .mv-bar{top:60px}
+.ev-side{border-left:1px solid var(--line);overflow:auto;padding:60px 14px 14px;display:flex;flex-direction:column;gap:12px}
+.evsum{display:flex;flex-direction:column;gap:12px}
+.evid{display:flex;flex-direction:column}.evid .mono{font-size:16px;font-weight:500;word-break:break-all}.evid .t{color:var(--muted);font-size:13px}
+.evstats{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;margin:0;font-size:13px}.evstats dt{color:var(--muted)}.evstats dd{margin:0;min-width:0}
+.ev-body{padding:4px 18px 24px;max-width:1200px}
+.evsec{padding-top:18px}
+.evsec>h3{font-family:var(--f-head);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.evchart{width:100%;height:auto;display:block;max-height:240px}
+.evlegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}.evlegend span{display:inline-flex;align-items:center;gap:6px}
+.lline{width:18px;height:3px;background:var(--accent);border-radius:2px}
+.evscroll{max-height:none;border:1px solid var(--line);border-radius:6px}
+.evscroll table.grid td.wrap{white-space:normal;min-width:180px;max-width:420px}
+.evmx td.c{text-align:center}.evmx .grow{color:var(--serious);font-size:11px}
+td.down{color:var(--serious);font-weight:600}td.up{color:var(--good);font-weight:600}
+.trend{display:inline-flex;align-items:center;gap:2px;white-space:nowrap}
+details{border:1px solid var(--line);border-radius:6px;margin-bottom:8px}
+details>summary{cursor:pointer;padding:8px 10px;font-size:13px}
+details>.tv-wrap,details>.photos{margin:0 10px 10px}
+.evph{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.evph button{display:flex;flex-direction:column;aspect-ratio:auto}.evph img{aspect-ratio:4/3}
+.evph .cap{font-size:11px;color:var(--muted);padding:3px 5px;text-align:left}
+#evFormHost:empty{display:none}#evFormHost{padding-top:16px}
 .p-head{padding:14px 16px 12px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:4px 12px}
 .p-head .pid{font-family:var(--f-mono);font-size:17px;font-weight:500;margin:0;word-break:break-all}
 .p-head .ptype{color:var(--muted);font-size:13px;grid-column:1}
@@ -196,6 +232,10 @@ legend{font-size:12px;color:var(--muted);padding:0 4px}
   #memberWin{position:fixed;inset:0;z-index:40;border-radius:0;grid-template-columns:minmax(0,1fr);grid-template-rows:42vh minmax(0,1fr);padding-top:env(safe-area-inset-top,0px)}
   #memberWin #panel{position:static;border-left:0;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
   .mv-legend{display:none}
+  #elemView{position:fixed;inset:0;z-index:30;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);padding-top:env(safe-area-inset-top,0px)}
+  .ev-pick{padding:56px 12px 8px;border-right:0;border-bottom:1px solid var(--line)}.evlist{max-height:22vh}
+  body.ev-on .ov-tl{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px));z-index:31}
+  .ev-top{grid-template-columns:minmax(0,1fr);height:auto}.ev-3d .mv-bar{top:10px}.ev-3d{height:44vh}.ev-side{border-left:0;padding:14px}
   .ov-hint{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -275,6 +315,7 @@ legend{font-size:12px;color:var(--muted);padding:0 4px}
         <button type="button" id="vm3d" aria-pressed="true">3D</button>
         <button type="button" id="vmPlan" aria-pressed="false">Floor plan</button>
         <button type="button" id="vmTable" aria-pressed="false">Table</button>
+        <button type="button" id="vmElem" aria-pressed="false">Element</button>
       </div>
       <button class="btn" type="button" id="resetView">Reset view</button>
       <span class="planlabel" id="planLabel" hidden></span>
@@ -295,8 +336,25 @@ legend{font-size:12px;color:var(--muted);padding:0 4px}
       <div class="tv-wrap" id="tvWrap"><table class="grid" id="tvTable"><thead><tr id="tvHead"></tr></thead><tbody id="tvBody"></tbody></table></div>
     </div>
 
+    <div id="elemView" hidden>
+      <aside class="ev-pick" aria-label="Choose a member">
+        <input type="search" id="evQ" placeholder="Search ID, grid, mark…" aria-label="Search members" spellcheck="false">
+        <select id="evLevel" aria-label="Level"></select>
+        <select id="evType" aria-label="Member type"></select>
+        <select id="evCond" aria-label="Condition">
+          <option value="">Any condition</option><option value="def">Has open defects</option><option value="good">NBI 7–9</option><option value="fair">NBI 5–6</option>
+          <option value="poor">NBI 4</option><option value="serious">NBI 0–3</option><option value="none">Not inspected</option>
+        </select>
+        <span class="note" id="evCount"></span>
+        <ul id="evList" class="evlist"></ul>
+      </aside>
+      <div class="ev-main" id="evMain">
+        <div class="ev-top"><div class="ev-3d" id="evStage3d"></div><div class="ev-side" id="evSide"></div></div>
+        <div class="ev-body" id="evBody"></div>
+      </div>
+    </div>
     <section id="memberWin" hidden aria-label="Member view">
-      <div class="mv-left">
+      <div class="mv-left" id="mvLeft">
         <div id="mvStage" aria-label="3D view of the selected member"></div>
         <div class="mv-bar">
           <span class="mvt" id="mvTitle"></span>
@@ -312,6 +370,7 @@ legend{font-size:12px;color:var(--muted);padding:0 4px}
         <p class="pid" id="pId"></p>
         <button class="close" type="button" id="pClose" aria-label="Close details">×</button>
         <span class="ptype" id="pType"></span>
+        <button class="btn" type="button" id="pToElem" style="grid-column:1;justify-self:start;margin-top:6px">Open in Element view</button>
       </div>
       <div class="p-body" id="pBody"></div>
     </section>
@@ -712,14 +771,17 @@ function loop(){
 }
 
 function setMode(m){
-  mode=m;
-  $("vm3d").setAttribute("aria-pressed",m==="3d");$("vmPlan").setAttribute("aria-pressed",m==="plan");$("vmTable").setAttribute("aria-pressed",m==="table");
+  const was=mode;mode=m;
+  $("vm3d").setAttribute("aria-pressed",m==="3d");$("vmPlan").setAttribute("aria-pressed",m==="plan");$("vmTable").setAttribute("aria-pressed",m==="table");$("vmElem").setAttribute("aria-pressed",m==="element");
+  $("elemView").hidden=m!=="element";document.body.classList.toggle("ev-on",m==="element");
+  if(was==="element"&&m!=="element"){evLeave();if(selected){$("memberWin").hidden=false;renderPanel();}}
   if(m==="plan"&&level==="all")level=2;
-  const tbl=m==="table";$("tableView").hidden=!tbl;$("legend").hidden=tbl;$("hint").hidden=tbl;$("resetView").hidden=tbl;$("tip").hidden=true;
+  const tbl=m==="table"||m==="element";$("tableView").hidden=m!=="table";$("legend").hidden=tbl;$("hint").hidden=tbl;$("resetView").hidden=tbl;$("tip").hidden=true;
   try{localStorage.setItem("garageAsset."+PROJECT+".view",m);}catch(e){}
   camera=m==="plan"?ortho:persp;ctl3.enabled=m==="3d";ctlP.enabled=m==="plan";
   $("hint").textContent=m==="plan"?"Click a member for details · drag to pan · scroll to zoom":"Click a member for details · drag to orbit · right-drag to pan · scroll to zoom";
   refreshAll();
+  if(m==="element"&&was!=="element")evEnter();
 }
 function resetView(){
   anim=null;
@@ -860,7 +922,8 @@ $("tvCond").addEventListener("change",()=>renderTable());
 function refreshAll(){
   applyStyle();renderLevels();renderSummary();renderLegend();
   const pl=$("planLabel");
-  if(mode==="table"){pl.hidden=false;pl.textContent=level==="all"?"All levels":LEVELS[level-1].name;renderTable();}
+  if(mode==="element"){pl.hidden=true;evRenderList();}
+  else if(mode==="table"){pl.hidden=false;pl.textContent=level==="all"?"All levels":LEVELS[level-1].name;renderTable();}
   else if(mode==="plan"){pl.hidden=false;pl.textContent="Plan · "+LEVELS[level-1].name;}
   else if(level!=="all"){pl.hidden=false;pl.textContent=LEVELS[level-1].name+" isolated";}
   else pl.hidden=true;
@@ -886,6 +949,7 @@ function center(c){
 }
 function select(id,fly){
   const c=byId.get(id);if(!c)return;
+  if(mode==="element"){evShow(id);return;}
   selected=id;formOpen=false;
   const L=c.level;
   if((level!=="all"&&level!==L)||(fly&&level==="all"&&mode==="3d")){level=L;} // flying to a member inside the building: isolate its level so it can be seen
@@ -895,7 +959,7 @@ function select(id,fly){
   try{history.replaceState(null,"","#"+id);}catch(e){}
 }
 function closePanel(){
-  if(!selected)return;selected=null;formOpen=false;mv.temp=null;mvSetPlacing(false);$("memberWin").hidden=true;applyStyle();
+  if(!selected||mode==="element")return;selected=null;formOpen=false;mv.temp=null;mvSetPlacing(false);$("memberWin").hidden=true;applyStyle();
   try{history.replaceState(null,"",location.pathname+location.search);}catch(e){}
 }
 $("pClose").onclick=closePanel;
@@ -920,6 +984,7 @@ function trendSvg(list){
 }
 
 function renderPanel(){
+  if(mode==="element"){renderElement();return;}
   const c=byId.get(selected);if(!c)return;
   $("pId").textContent=c.id;$("pType").textContent=TYPES[c.type].name;
   const body=$("pBody");const keepScroll=body.scrollTop;body.textContent="";
@@ -1106,7 +1171,7 @@ function mvInit(){
 function mvTheme(){if(!mv.ready)return;const cs=getComputedStyle(document.documentElement);mv.renderer.setClearColor(new THREE.Color(cs.getPropertyValue("--stage").trim()||"#dde1e6"));mv.needs=true;}
 function mvResize(){const h=$("mvStage"),w=h.clientWidth,ht=h.clientHeight;if(!w||!ht)return;mv.renderer.setSize(w,ht,false);mv.renderer.domElement.style.width=w+"px";mv.renderer.domElement.style.height=ht+"px";mv.cam.aspect=w/ht;mv.cam.updateProjectionMatrix();mv.needs=true;}
 function mvTick(){
-  if(!mv.ready||$("memberWin").hidden)return;
+  if(!mv.ready||(mode!=="element"&&$("memberWin").hidden))return;
   if(mv.anim){mv.anim.t=Math.min(1,mv.anim.t+0.07);const k=1-Math.pow(1-mv.anim.t,3);mv.anim.step(k);if(mv.anim.t>=1)mv.anim=null;mv.needs=true;}
   if(mv.needs){mv.needs=false;mv.renderer.render(mv.scene,mv.cam);}
 }
@@ -1321,6 +1386,180 @@ function defCsv(){
   return toCsv(rows);
 }
 
+/* ---------------- Element view (4th tab) ----------------
+   One member at a time: a picker on the left (filters + list), the member in 3D (the member-window viewer, moved here) with a
+   summary card, then the record built for many years of data: condition timeline (NBI by inspection, open defects by condition
+   state), defect register, defect × inspection matrix, inspection history grouped by year, photos grouped by year. */
+let evId=null;
+const evF={q:"",level:"",type:"",cond:""};
+function evMatches(c){
+  if(evF.level&&String(c.level)!==evF.level)return false;
+  if(evF.type&&c.type!==evF.type)return false;
+  const l=latest.get(c.id),s=defSummary.get(c.id);
+  if(evF.cond==="def"&&!s)return false;
+  if(evF.cond==="none"&&l)return false;
+  if(["good","fair","poor","serious"].includes(evF.cond)&&cat(l?l.rating:null)!==evF.cond)return false;
+  if(evF.q){const q=evF.q.toLowerCase();if(!(c.id.toLowerCase().includes(q)||String(c.grid).toLowerCase().includes(q)||String(c.size||"").toLowerCase().includes(q)||c.props.some(p=>String(p[1]).toLowerCase().includes(q))))return false;}
+  return true;
+}
+let evList=[];
+function evBuildPicker(){
+  const lv=$("evLevel"),ty=$("evType");
+  if(!lv.options.length){lv.append(el("option",{value:"",text:"All levels"}));LEVELS.slice().reverse().forEach(L=>lv.append(el("option",{value:String(L.n),text:L.name})));
+    ty.append(el("option",{value:"",text:"All member types"}));const used=new Set(comps.map(c=>c.type));Object.keys(TYPES).filter(k=>used.has(k)).sort((a,b)=>TYPES[a].name.localeCompare(TYPES[b].name)).forEach(k=>ty.append(el("option",{value:k,text:TYPES[k].name})));}
+}
+function evRenderList(){
+  evBuildPicker();
+  evList=comps.filter(evMatches).sort((a,b)=>a.id.localeCompare(b.id,undefined,{numeric:true}));
+  const ul=$("evList");ul.textContent="";
+  $("evCount").textContent=`${evList.length.toLocaleString()} member${evList.length===1?"":"s"}`;
+  const max=400,frag=document.createDocumentFragment();
+  evList.slice(0,max).forEach(c=>{const l=latest.get(c.id),s=defSummary.get(c.id);
+    const b=el("button",{type:"button",class:"evi"+(c.id===evId?" on":""),"data-id":c.id},rateChip(l?l.rating:null),el("span",{class:"evt"},el("span",{class:"mono",text:c.id}),el("span",{class:"t",text:`${TYPES[c.type].name.split(" (")[0]} · ${c.grid}`})),s?csChip(s.worst):el("span"));
+    b.onclick=()=>evShow(c.id);frag.append(el("li",null,b));});
+  ul.append(frag);
+  if(evList.length>max)ul.append(el("li",{class:"note",text:`Showing the first ${max}. Narrow the filters to see the rest.`}));
+}
+function evShow(id){
+  if(!byId.has(id))return;
+  evId=id;selected=id;formOpen=false;openCard=null;mv.temp=null;
+  document.querySelectorAll("#evList .evi").forEach(b=>b.classList.toggle("on",b.dataset.id===id));
+  mvOpen(id);renderElement();applyStyle();
+  try{history.replaceState(null,"","#"+id);}catch(e){}
+}
+function evStep(d){const i=evList.findIndex(c=>c.id===evId);const n=evList[i<0?0:Math.min(evList.length-1,Math.max(0,i+d))];if(n)evShow(n.id);}
+// state of each defect chain on a date (latest observation on or before it)
+function chainAt(ch,date){let s=null;ch.obs.forEach(o=>{if(String(o.date)<=date)s=o;});return s;}
+function evTimeline(c){
+  const insp=compInspections(c.id).slice().reverse(),chs=defectChains(c.id);
+  const dates=[...new Set(insp.map(i=>i.date).concat(defects.filter(d=>d.componentId===c.id).map(d=>d.date)))].filter(Boolean).sort();
+  if(!dates.length)return el("p",{class:"empty",text:"No inspections or defects recorded yet. The timeline fills in as inspections are added."});
+  const NS="http://www.w3.org/2000/svg",W=720,H=200,L=44,R=16,T=14,B=40,ph=H-T-B;
+  const svg=document.createElementNS(NS,"svg");svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.setAttribute("class","evchart");svg.setAttribute("role","img");
+  const t0=new Date(dates[0]).getTime(),t1=new Date(dates[dates.length-1]).getTime(),span=Math.max(t1-t0,1);
+  const xs=d=>dates.length===1?L+(W-L-R)/2:L+(new Date(d).getTime()-t0)/span*(W-L-R);
+  const yN=r=>T+(9-r)/9*ph;
+  const mk=(tag,at,txt)=>{const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);if(txt!=null)e.textContent=txt;svg.append(e);return e;};
+  [9,7,5,3,0].forEach(r=>{mk("line",{x1:L,x2:W-R,y1:yN(r),y2:yN(r),stroke:"var(--line)"});mk("text",{x:L-8,y:yN(r)+4,"text-anchor":"end","font-size":11,fill:"var(--muted)"},r);});
+  mk("text",{x:4,y:T+4,"font-size":10,fill:"var(--muted)"},"NBI");
+  // open defects by CS at each date: stacked bars (right axis scale)
+  const counts=dates.map(d=>{const k={1:0,2:0,3:0,4:0};chs.forEach(ch=>{const s=chainAt(ch,d);if(s&&isOpen(s))k[s.cs]++;});return k;});
+  const maxC=Math.max(1,...counts.map(k=>k[1]+k[2]+k[3]+k[4])),bw=Math.min(22,(W-L-R)/Math.max(dates.length,1)*0.5);
+  dates.forEach((d,i)=>{let y=T+ph;[1,2,3,4].forEach(cs=>{const n=counts[i][cs];if(!n)return;const h=n/maxC*ph*0.55;y-=h;
+    mk("rect",{x:xs(d)-bw/2,y,width:bw,height:h,fill:`var(--${CS_CAT[cs]})`,opacity:0.5}).append(Object.assign(document.createElementNS(NS,"title"),{textContent:`${d}: ${n} open CS${cs}`}));});
+    const tot=counts[i][1]+counts[i][2]+counts[i][3]+counts[i][4];if(tot)mk("text",{x:xs(d),y:y-3,"text-anchor":"middle","font-size":10,fill:"var(--muted)"},tot);});
+  // NBI step line
+  if(insp.length){let path="";insp.forEach((i,k)=>{const x=xs(i.date),y=yN(i.rating);path+=k?` H${x} V${y}`:`M${x} ${y}`;});
+    if(dates[dates.length-1]>insp[insp.length-1].date)path+=` H${xs(dates[dates.length-1])}`;
+    mk("path",{d:path,fill:"none",stroke:"var(--accent)","stroke-width":2.5});
+    insp.forEach(i=>{const cc=mk("circle",{cx:xs(i.date),cy:yN(i.rating),r:5,fill:`var(--${cat(i.rating)})`,stroke:"var(--surface)","stroke-width":1.5});cc.append(Object.assign(document.createElementNS(NS,"title"),{textContent:`${i.date}: NBI ${i.rating}`}));});}
+  // x labels: years (or dates when within one year)
+  const yrs=[...new Set(dates.map(d=>d.slice(0,4)))];
+  if(yrs.length>1){for(let y=+yrs[0];y<=+yrs[yrs.length-1];y++){const x=xs(`${y}-01-01`);if(x>=L-1&&x<=W-R+1){mk("line",{x1:x,x2:x,y1:T,y2:T+ph,stroke:"var(--line)","stroke-dasharray":"2 3"});}mk("text",{x:Math.min(Math.max(xs(`${y}-07-01`),L+12),W-R-12),y:H-B+18,"text-anchor":"middle","font-size":11,fill:"var(--muted)"},y);}}
+  else dates.forEach(d=>mk("text",{x:xs(d),y:H-B+18,"text-anchor":"middle","font-size":11,fill:"var(--muted)"},fmtDate(d)));
+  const lg=el("div",{class:"evlegend"},el("span",null,el("span",{class:"lline"}),"NBI rating"),...[1,2,3,4].map(k=>el("span",null,el("span",{class:"swatch",style:`background:var(--${CS_CAT[k]});opacity:.6`}),`Open CS${k}`)));
+  return el("div",null,svg,lg);
+}
+function evSummary(c){
+  const l=latest.get(c.id),r=l?l.rating:null,insp=compInspections(c.id),chs=defectChains(c.id),open=chs.filter(x=>isOpen(x.cur)),ph=compPhotos(c.id);
+  const first=insp.length?insp[insp.length-1].date:null;
+  const addI=el("button",{class:"btn",type:"button",text:"Add inspection"}),addD=el("button",{class:"btn primary",type:"button",text:"Add defect"});
+  addD.onclick=()=>mvSetPlacing(true);
+  addI.onclick=()=>{formOpen=true;const host=$("evFormHost");host.textContent="";host.append(inspForm(c,l));host.scrollIntoView({block:"nearest"});};
+  const prev=el("button",{class:"btn",type:"button",text:"‹ Previous","aria-label":"Previous member in the list"}),next=el("button",{class:"btn",type:"button",text:"Next ›","aria-label":"Next member in the list"});
+  prev.onclick=()=>evStep(-1);next.onclick=()=>evStep(1);
+  const worst=open.length?Math.max(...open.map(x=>x.cur.cs)):null;
+  return el("div",{class:"evsum"},
+    el("div",{class:"evid"},el("span",{class:"mono",text:c.id}),el("span",{class:"t",text:TYPES[c.type].name})),
+    el("div",{class:"cond"},el("div",{class:"big "+cat(r),text:r==null?"–":String(r)}),el("div",{class:"lbl",text:r==null?"Not yet inspected":`NBI ${r} · ${NBI[r][0]}`}),
+      el("div",{class:"when",text:l?`Last inspected ${fmtDate(l.date)}${l.inspector?" by "+l.inspector:""}`:"No inspection recorded"}),el("div",{class:"when",text:l&&l.action&&l.action!=="None"?"Action: "+l.action:""})),
+    el("dl",{class:"evstats"},
+      el("dt",{text:"Open defects"}),el("dd",null,open.length?el("span",null,String(open.length)+" ",csChip(worst)):"None"),
+      el("dt",{text:"Inspections"}),el("dd",{text:insp.length?`${insp.length} since ${first.slice(0,4)}`:"0"}),
+      el("dt",{text:"Defects recorded"}),el("dd",{text:`${chs.length} (${chs.length-open.length} closed)`}),
+      el("dt",{text:"Photos"}),el("dd",{text:String(ph.length)}),
+      el("dt",{text:"Location"}),el("dd",{text:c.grid})),
+    el("div",{class:"row"},addD,addI),el("div",{class:"row"},prev,next));
+}
+function evMatrix(c){
+  const chs=defectChains(c.id);if(!chs.length)return null;
+  const dates=[...new Set(chs.flatMap(x=>x.obs.map(o=>o.date)))].sort();
+  const t=el("table",{class:"grid evmx"}),hr=el("tr",null,el("th",{text:"Defect"}));dates.forEach(d=>hr.append(el("th",{text:fmtDate(d)})));t.append(el("thead",null,hr));
+  const tb=el("tbody");
+  chs.forEach(x=>{const tr=el("tr",{tabindex:"0"});tr.append(el("td",null,el("span",{class:"pin "+CS_CAT[x.cur.cs]+(isOpen(x.cur)?"":" hollow"),text:String(x.num)})," ",x.root.type));
+    dates.forEach(d=>{const o=x.obs.find(q=>q.date===d);tr.append(el("td",{class:"c"},o?(o.status==="Repaired"||o.status==="Not found"?el("span",{class:"tag",text:o.status}):el("span",null,csChip(o.cs),o.status==="Grown"?el("span",{class:"grow",text:" ▲",title:"Grown"}):null)):el("span",{class:"note",text:"·"})));});
+    tr.onclick=()=>showDefectCard(x.root.id);tr.onkeydown=e=>{if(e.key==="Enter")showDefectCard(x.root.id);};tb.append(tr);});
+  t.append(tb);return el("div",{class:"tv-wrap evscroll"},t);
+}
+function evRegister(c){
+  const chs=defectChains(c.id);
+  if(!chs.length)return el("p",{class:"empty",text:"No defects recorded on this member."});
+  const t=el("table",{class:"grid"});
+  t.append(el("thead",null,el("tr",null,...["#","Defect","Location","First seen","Last seen","Condition trend","Size (latest)","Status","Photos"].map(h=>el("th",{text:h})))));
+  const tb=el("tbody");
+  chs.forEach(x=>{const d=x.cur,trend=el("span",{class:"trend"});x.obs.forEach((o,i)=>{if(i)trend.append(" → ");trend.append(csChip(o.cs,!isOpen(o)));});
+    const tr=el("tr",{tabindex:"0",class:openCard===x.root.id?"sel":""},el("td",null,el("span",{class:"pin "+CS_CAT[d.cs]+(isOpen(d)?"":" hollow"),text:String(x.num)})),el("td",{text:x.root.type}),
+      el("td",{text:d.location.desc,title:d.location.desc,class:"wrap"}),el("td",{text:fmtDate(x.root.date)}),el("td",{text:fmtDate(d.date)}),el("td",null,trend),el("td",{text:sizeTxt(d)||"–"}),el("td",{text:d.status}),el("td",{class:"n",text:String(chainPhotos(x).length)}));
+    tr.onclick=()=>showDefectCard(x.root.id);tr.onkeydown=e=>{if(e.key==="Enter")showDefectCard(x.root.id);};tb.append(tr);});
+  t.append(tb);return el("div",{class:"tv-wrap evscroll"},t);
+}
+function evInspections(c){
+  const list=compInspections(c.id);
+  if(!list.length)return el("p",{class:"empty",text:"No inspections recorded."});
+  const byYear=new Map();list.forEach(i=>{const y=String(i.date).slice(0,4);if(!byYear.has(y))byYear.set(y,[]);byYear.get(y).push(i);});
+  const wrap=el("div");let k=0;
+  byYear.forEach((rows,y)=>{const det=el("details",k<3?{open:""}:null),sm=el("summary",null,el("strong",{text:y}),` · ${rows.length} inspection${rows.length>1?"s":""} · NBI ${rows.map(r=>r.rating).join(", ")}`);det.append(sm);
+    const t=el("table",{class:"grid"});t.append(el("thead",null,el("tr",null,...["Date","Inspector","NBI","Change","Defects noted","Recommended action","Notes"].map(h=>el("th",{text:h})))));
+    const tb=el("tbody");rows.forEach(i=>{const idx=list.indexOf(i),prev=list[idx+1],dl=prev?i.rating-prev.rating:null;
+      tb.append(el("tr",null,el("td",{text:fmtDate(i.date)}),el("td",{text:i.inspector||""}),el("td",null,rateChip(i.rating)),el("td",{class:dl<0?"down":dl>0?"up":"",text:dl==null?"–":dl===0?"same":(dl>0?"▲ +":"▼ ")+dl}),
+        el("td",{class:"wrap",text:(i.defects||[]).join(", ")||"–"}),el("td",{text:i.action||""}),el("td",{class:"wrap",text:i.notes||""})));});
+    t.append(tb);det.append(el("div",{class:"tv-wrap evscroll"},t));wrap.append(det);k++;});
+  return wrap;
+}
+function evPhotos(c){
+  const ph=compPhotos(c.id);if(!ph.length)return el("p",{class:"empty",text:"No photos yet."});
+  const chs=defectChains(c.id),num=p=>{const x=p.defectId?chs.find(q=>q.obs.some(o=>o.id===p.defectId)):null;return x?"Defect "+x.num:null;};
+  const byYear=new Map();ph.forEach(p=>{const y=String(p.date||"").slice(0,4)||"Undated";if(!byYear.has(y))byYear.set(y,[]);byYear.get(y).push(p);});
+  const wrap=el("div");let k=0;
+  byYear.forEach((rows,y)=>{const det=el("details",k<2?{open:""}:null);det.append(el("summary",null,el("strong",{text:y}),` · ${rows.length} photo${rows.length>1?"s":""}`));
+    const g=el("div",{class:"photos evph"});rows.forEach(p=>{const tag=num(p),img=el("img",{alt:p.caption||"Photo",loading:"lazy"});photoBlobUrl(p).then(u=>{if(u)img.src=u;});
+      const b=el("button",{type:"button"},img,el("span",{class:"cap",text:`${fmtDate(p.date)}${tag?" · "+tag:""}`}));
+      b.onclick=async()=>{const u=await photoBlobUrl(p);if(!u)return;$("lbImg").src=u;$("lbCap").textContent=`${c.id}${tag?" · "+tag:""} · ${fmtDate(p.date)}${p.caption?" · "+p.caption:""}`;$("lightbox").hidden=false;};g.append(b);});
+    det.append(g);wrap.append(det);k++;});
+  return wrap;
+}
+function renderElement(){
+  const body=$("evBody"),side=$("evSide");
+  if(!evId||!byId.has(evId)){side.textContent="";body.textContent="";body.append(el("p",{class:"empty",text:"Choose a member from the list on the left (filter by level, member type, condition or search), or click a member in the 3D view and press Open in Element view."}));$("evMain").classList.add("none");return;}
+  $("evMain").classList.remove("none");
+  const c=byId.get(evId),keep=$("evMain").scrollTop;
+  side.textContent="";side.append(evSummary(c));
+  body.textContent="";
+  const sec=(t,...k)=>el("section",{class:"evsec"},el("h3",{text:t}),...k);
+  body.append(el("div",{id:"evFormHost"}));
+  body.append(sec("Condition over time",evTimeline(c)));
+  const ds=defectSection(c);ds.classList.add("evsec");body.append(ds);
+  body.append(sec("Defect register",evRegister(c)));
+  const mx=evMatrix(c);if(mx)body.append(sec("Defects by inspection",el("p",{class:"note",text:"Condition state of each defect at each inspection. ▲ grown since the previous inspection."}),mx));
+  body.append(sec("Inspection history",evInspections(c)));
+  body.append(sec("Photos",evPhotos(c)));
+  const dlp=el("dl",{class:"props"});dlp.append(el("dt",{text:"Component ID"}),el("dd",{class:"mono",text:c.id}));c.props.forEach(([k,v])=>dlp.append(el("dt",{text:k}),el("dd",{text:v})));
+  body.append(sec("Member information",dlp));
+  $("evMain").scrollTop=keep;
+}
+function evEnter(){
+  $("evStage3d").append($("mvLeft"));
+  evRenderList();
+  if(!evId&&selected)evId=selected;
+  if(!evId&&evList.length)evId=evList[0].id;
+  $("memberWin").hidden=true;
+  if(evId)evShow(evId);else renderElement();
+}
+function evLeave(){$("memberWin").prepend($("mvLeft"));}
+["evQ","evLevel","evType","evCond"].forEach(id=>$(id).addEventListener(id==="evQ"?"input":"change",e=>{evF[{evQ:"q",evLevel:"level",evType:"type",evCond:"cond"}[id]]=e.target.value.trim();evRenderList();}));
+$("vmElem").onclick=()=>setMode("element");
+$("pToElem").onclick=()=>{const id=selected;evId=id;setMode("element");};
+
 $("mvAdd").onclick=()=>mvSetPlacing(!mv.placing);
 $("mvAbove").onclick=()=>mvView("above");$("mvBelow").onclick=()=>mvView("below");
 $("mvNeigh").onchange=e=>{mv.neigh=e.target.checked;if(mv.neighGroup)mv.neighGroup.visible=mv.neigh;mv.needs=true;};
@@ -1355,7 +1594,7 @@ $("csvCopy").onclick=()=>{const t=$("csvText");navigator.clipboard.writeText(t.v
 
 /* ---------------- Start ---------------- */
 themeBg();resize();refreshAll();resetView();loop();
-try{const v=localStorage.getItem("garageAsset."+PROJECT+".view");if(v==="table"||v==="plan")setMode(v);}catch(e){}
+try{const v=localStorage.getItem("garageAsset."+PROJECT+".view");if(v==="table"||v==="plan"||v==="element")setMode(v);}catch(e){}
 const h=decodeURIComponent((location.hash||"").slice(1));
 if(byId.has(h))setTimeout(()=>select(h,true),50);
 $("syncNow").onclick=()=>syncNow();

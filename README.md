@@ -32,3 +32,12 @@ Clicking a member opens a member window: the member alone in 3D (neighbours fain
 - **Re-inspect** adds a new observation (Unchanged / Grown / Repaired / Not found) with its own condition state, size and photos; the full history is kept.
 - Pins are numbered and coloured by condition state; the main model shows a badge with the open-defect count on each member; the table has Open defects and Worst CS columns; **Defect log** exports every observation to CSV.
 - Stored in IndexedDB (store "defects", database version 2) and synced to `garage-assets/alewife/defects/<id>.json`; defect photos sync with the other photos and carry `defectId`.
+
+## Element view (fourth tab, 2026-11-26)
+One member at a time, built for many years of inspection data:
+- **Picker:** search (ID, grid, mark), level, member type and condition filters (including "has open defects"); Previous / Next step through the filtered list. From the 3D view, a member's window has **Open in Element view**.
+- **3D view** of the member with its defect pins (Add defect works here too) and a **summary card**: current NBI, last inspection, recommended action, open defects and worst CS, number of inspections and since when, photos.
+- **Condition over time:** NBI rating as a step line across the years, with bars for the open defects by condition state at each inspection.
+- **Defects** (cards), **Defect register** (one row per defect: first and last seen, condition-state trend CS2 → CS3 → CS4, latest size, status, photos) and **Defects by inspection** (each defect's condition state at each inspection date, ▲ when grown).
+- **Inspection history** grouped by year (latest three years open, older years folded), with the change in NBI from the previous inspection.
+- **Photos** grouped by year, tagged with their defect number.
