@@ -109,6 +109,35 @@ table.grid td.n{text-align:right}
 #tip{position:absolute;pointer-events:none;background:var(--fg);color:var(--bg);font-family:var(--f-mono);font-size:12px;padding:3px 7px;border-radius:4px;white-space:nowrap;transform:translate(12px,12px)}
 /* details window */
 #panel{position:absolute;z-index:4;top:12px;right:12px;bottom:12px;width:min(430px,calc(100% - 24px));background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:0}
+#memberWin{position:absolute;z-index:5;inset:12px;display:grid;grid-template-columns:minmax(0,1fr) min(430px,42%);background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);overflow:hidden;min-height:0}
+.mv-left{position:relative;min-width:0;min-height:0;background:var(--stage)}
+#mvStage{position:absolute;inset:0}
+#mvStage canvas{display:block;touch-action:none}
+.mv-bar{position:absolute;top:10px;left:10px;right:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;pointer-events:none}
+.mv-bar>*{pointer-events:auto}
+.mv-bar .mvt{font-family:var(--f-mono);font-size:13px;background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:5px 9px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mv-bar label{display:inline-flex;gap:6px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:5px 9px;font-size:13px}
+#mvAdd[aria-pressed="true"]{outline:3px solid var(--accent-soft)}
+#mvHint{position:absolute;left:10px;bottom:10px;right:10px;font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:5px 9px;width:fit-content;max-width:calc(100% - 20px)}
+#mvHint.placing{color:var(--accent-fg);background:var(--accent);border-color:var(--accent);font-weight:600}
+.mv-legend{position:absolute;right:10px;bottom:10px;display:flex;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:5px 8px}
+#memberWin #panel{position:static;inset:auto;width:auto;border:0;border-left:1px solid var(--line);border-radius:0;box-shadow:none}
+.rate.hollow{background:var(--surface);color:var(--fg);border:2px solid currentColor}
+.rate.good.hollow{color:var(--good)}.rate.fair.hollow{color:var(--fair)}.rate.poor.hollow{color:var(--poor)}.rate.serious.hollow{color:var(--serious)}
+.dlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.dcard{border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.dcard.open{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.dcard>*:not(.dhead){margin:8px 10px}
+.dhead{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;width:100%;padding:8px 10px}
+.dhead:hover{background:var(--surface-2)}
+.dhead:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.pin{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;color:#fff;font-weight:600;font-size:12px;border:2px solid #fff;box-shadow:0 0 0 1px var(--line)}
+.pin.good{background:var(--good)}.pin.fair{background:var(--fair)}.pin.poor{background:var(--poor)}.pin.serious{background:var(--serious)}
+.pin.hollow{background:var(--surface);color:var(--muted)}
+.dmain{min-width:0;display:flex;flex-direction:column}
+.dmain .dt{font-weight:500}
+.dmain .dl{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dhist{margin:0;padding-left:18px;font-size:12px;color:var(--muted)}
 .p-head{padding:14px 16px 12px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:4px 12px}
 .p-head .pid{font-family:var(--f-mono);font-size:17px;font-weight:500;margin:0;word-break:break-all}
 .p-head .ptype{color:var(--muted);font-size:13px;grid-column:1}
@@ -127,6 +156,8 @@ dl.props dt{color:var(--muted)} dl.props dd{margin:0;min-width:0}
 .mono{font-family:var(--f-mono);font-size:12.5px}
 .photos{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .photos button{padding:0;border:1px solid var(--line);border-radius:4px;overflow:hidden;aspect-ratio:4/3;background:var(--surface-2);cursor:zoom-in;max-width:100%}
+.photos button{position:relative}
+.ptag{position:absolute;top:4px;left:4px;width:20px;height:20px;font-size:11px}
 .photos img{width:100%;height:100%;object-fit:cover;display:block}
 .empty{color:var(--muted);font-size:13px;margin:0;border:1px dashed var(--line);border-radius:5px;padding:10px}
 .hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
@@ -162,6 +193,9 @@ legend{font-size:12px;color:var(--muted);padding:0 4px}
   main.view{grid-row:2}
   aside.side{grid-row:3;overflow:visible}
   #panel{position:fixed;inset:auto 0 0 0;top:18vh;width:auto;border-radius:12px 12px 0 0;z-index:40;padding-bottom:env(safe-area-inset-bottom,0px)}
+  #memberWin{position:fixed;inset:0;z-index:40;border-radius:0;grid-template-columns:minmax(0,1fr);grid-template-rows:42vh minmax(0,1fr);padding-top:env(safe-area-inset-top,0px)}
+  #memberWin #panel{position:static;border-left:0;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .mv-legend{display:none}
   .ov-hint{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -228,6 +262,7 @@ legend{font-size:12px;color:var(--muted);padding:0 4px}
       <div class="row">
         <button class="btn" type="button" id="expComp">Components + ratings</button>
         <button class="btn" type="button" id="expInsp">Inspection log</button>
+        <button class="btn" type="button" id="expDef">Defect log</button>
       </div>
       <p class="note">CSV files open directly in Excel. Opens in Excel; a SharePoint workbook link can come later.</p>
     </section>
@@ -260,13 +295,26 @@ legend{font-size:12px;color:var(--muted);padding:0 4px}
       <div class="tv-wrap" id="tvWrap"><table class="grid" id="tvTable"><thead><tr id="tvHead"></tr></thead><tbody id="tvBody"></tbody></table></div>
     </div>
 
-    <section id="panel" hidden aria-label="Component details">
+    <section id="memberWin" hidden aria-label="Member view">
+      <div class="mv-left">
+        <div id="mvStage" aria-label="3D view of the selected member"></div>
+        <div class="mv-bar">
+          <span class="mvt" id="mvTitle"></span>
+          <button class="btn primary" type="button" id="mvAdd" aria-pressed="false">Add defect</button>
+          <div class="seg" role="group" aria-label="View direction"><button type="button" id="mvAbove">From above</button><button type="button" id="mvBelow">From below</button></div>
+          <label><input type="checkbox" id="mvNeigh" checked> Neighbours</label>
+        </div>
+        <div class="mv-legend" aria-label="Condition states"><span class="rate good">CS1</span><span class="rate fair">CS2</span><span class="rate poor">CS3</span><span class="rate serious">CS4</span></div>
+        <div id="mvHint"></div>
+      </div>
+    <section id="panel" aria-label="Component details">
       <div class="p-head">
         <p class="pid" id="pId"></p>
         <button class="close" type="button" id="pClose" aria-label="Close details">×</button>
         <span class="ptype" id="pType"></span>
       </div>
       <div class="p-body" id="pBody"></div>
+    </section>
     </section>
   </main>
 </div>
@@ -343,8 +391,8 @@ const blobUrls=new Map();
 let idb=null;
 function idbOpen(){return new Promise((res,rej)=>{
   if(!window.indexedDB)return rej(new Error("no indexedDB"));
-  const r=indexedDB.open("garageAsset."+PROJECT+".v1",1);
-  r.onupgradeneeded=()=>{const d=r.result;["inspections","photos","blobs"].forEach(n=>{if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:"id"});});};
+  const r=indexedDB.open("garageAsset."+PROJECT+".v1",2);   // v2 adds the "defects" store; existing stores and records are kept
+  r.onupgradeneeded=()=>{const d=r.result;["inspections","photos","blobs","defects"].forEach(n=>{if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:"id"});});};
   r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
 function idbAll(store){return new Promise((res)=>{if(!idb)return res([]);const q=idb.transaction(store).objectStore(store).getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>res([]);});}
 function idbGet(store,id){return new Promise((res)=>{if(!idb)return res(null);const q=idb.transaction(store).objectStore(store).get(id);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null);});}
@@ -358,10 +406,10 @@ function recompute(){
     const p=latest.get(i.componentId);
     if(!p||String(i.date)>String(p.date)||(i.date===p.date&&String(i.createdAt||"")>String(p.createdAt||"")))latest.set(i.componentId,i);
   }
-  refreshAll();
+  recomputeDefects();refreshAll();if(selected)mvPins();
 }
 function setSync(state,text){const s=$("sync");s.className="chip "+(state||"");$("syncText").textContent=text;}
-async function loadLocal(){inspections=await idbAll("inspections");photos=await idbAll("photos");recompute();}
+async function loadLocal(){inspections=await idbAll("inspections");photos=await idbAll("photos");defects=await idbAll("defects");recompute();}
 async function saveInspection(doc){doc.id=newId("insp");doc.synced=false;await idbPut("inspections",doc);inspections.push(doc);recompute();scheduleSync();return doc.id;}
 async function savePhoto(meta,blob){meta.id=newId("photo");meta.synced=false;meta.hasBlob=true;await idbPut("blobs",{id:meta.id,blob});await idbPut("photos",meta);photos.push(meta);return meta.id;}
 
@@ -402,6 +450,10 @@ async function syncNow(){
       const r=await c.put(`${ROOT}/inspections/${i.id}.json`,fileOf(Object.assign({},i,{device:s.device||""})),null,`Garage inspection ${i.componentId} ${i.date}`);
       if(r.ok||r.kind==="conflict"){i.synced=true;await idbPut("inspections",i);up++;}else{err=r.message;break;}
     }
+    if(!err)for(const d of defects.filter(x=>!x.synced)){
+      const r=await c.put(`${ROOT}/defects/${d.id}.json`,fileOf(Object.assign({},d,{device:s.device||""})),null,`Garage defect ${d.componentId} ${d.date}`);
+      if(r.ok||r.kind==="conflict"){d.synced=true;await idbPut("defects",d);up++;}else{err=r.message;break;}
+    }
     if(!err)for(const p of photos.filter(x=>!x.synced&&!x.example)){
       const b=await idbGet("blobs",p.id);if(!b)continue;
       const base=`${ROOT}/photos/${p.componentId}/${p.id}`;
@@ -414,13 +466,15 @@ async function syncNow(){
       const t=await c.tree(ROOT);
       if(!t.ok)err=t.message;
       else{
-        const haveI=new Set(inspections.map(i=>i.id)),haveP=new Set(photos.map(p=>p.id));
+        const haveI=new Set(inspections.map(i=>i.id)),haveP=new Set(photos.map(p=>p.id)),haveD=new Set(defects.map(d=>d.id));
         for(const [path] of t.files){
           let m=path.match(/\/inspections\/([A-Za-z0-9-]{1,80})\.json$/);
           if(m&&!haveI.has(m[1])){const r=await c.raw(path);if(r.ok){let j=null;try{j=JSON.parse(r.text);}catch(e){}const v=cleanInspection(j,m[1]);if(v){await idbPut("inspections",v);inspections.push(v);down++;}}continue;}
+          m=path.match(/\/defects\/([A-Za-z0-9-]{1,80})\.json$/);
+          if(m&&!haveD.has(m[1])){const r=await c.raw(path);if(r.ok){let j=null;try{j=JSON.parse(r.text);}catch(e){}const v=cleanDefect(j,m[1]);if(v){await idbPut("defects",v);defects.push(v);down++;}}continue;}
           m=path.match(/\/photos\/([A-Z0-9.-]{1,60})\/([A-Za-z0-9-]{1,80})\.json$/);
           if(m&&!haveP.has(m[2])&&byId.has(m[1])&&t.files.has(path.replace(/\.json$/,".jpg"))){const r=await c.raw(path);if(r.ok){let j={};try{j=JSON.parse(r.text)||{};}catch(e){}
-            const v={id:m[2],componentId:m[1],inspectionId:cleanStr(j.inspectionId,80)||null,caption:cleanStr(j.caption,200),date:cleanStr(j.date,10),createdAt:cleanStr(j.createdAt,30),synced:true,hasBlob:false};
+            const v={id:m[2],componentId:m[1],inspectionId:cleanStr(j.inspectionId,80)||null,defectId:cleanStr(j.defectId,80)||null,caption:cleanStr(j.caption,200),date:cleanStr(j.date,10),createdAt:cleanStr(j.createdAt,30),synced:true,hasBlob:false};
             await idbPut("photos",v);photos.push(v);down++;}}
         }
       }
@@ -433,7 +487,7 @@ async function syncNow(){
 function showSyncState(up,down){
   if(!idb){setSync("warn","Browser storage unavailable · records are lost when the page closes");return;}
   if(!ghOn()){setSync("warn","Saved in this browser only · GitHub sync off");return;}
-  const s=ghSettings(),pend=inspections.filter(i=>!i.synced&&!i.example).length+photos.filter(p=>!p.synced&&!p.example).length;
+  const s=ghSettings(),pend=inspections.filter(i=>!i.synced&&!i.example).length+defects.filter(d=>!d.synced).length+photos.filter(p=>!p.synced&&!p.example).length;
   setSync(pend?"warn":"ok",`GitHub ${s.owner}/${s.repo}`+(pend?` · ${pend} waiting to upload`:` · synced ${lastSync?lastSync.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}):""}`)+(up||down?` (${up} sent, ${down} received)`:""));
 }
 async function photoBlobUrl(p){
@@ -617,6 +671,7 @@ function applyStyle(){
   bubbles.children.forEach(s=>s.position.y=mode==="plan"?by+4:0.5);
   bubbles.visible=(mode==="plan"||level==="all"||level===1)||true;
   slab.visible=mode!=="plan";
+  renderBadges();
   req();
 }
 function resize(){
@@ -632,7 +687,7 @@ new ResizeObserver(resize).observe(stage);
 function themeBg(){
   const cs=getComputedStyle(document.documentElement);
   renderer.setClearColor(new THREE.Color(cs.getPropertyValue("--stage").trim()||"#dde1e6"));
-  buildBubbles();applyStyle();
+  buildBubbles();applyStyle();mvTheme();
 }
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",themeBg);
 new MutationObserver(themeBg).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
@@ -653,6 +708,7 @@ function loop(){
   requestAnimationFrame(loop);
   if(anim){anim.t=Math.min(1,anim.t+0.06);const k=1-Math.pow(1-anim.t,3);anim.step(k);if(anim.t>=1)anim=null;needs=true;}
   if(needs){needs=false;renderer.render(scene,camera);}
+  mvTick();
 }
 
 function setMode(m){
@@ -761,6 +817,8 @@ const TV_COLS=[
   {k:"defects",t:"Defects (latest)",v:c=>{const l=latest.get(c.id);return l&&Array.isArray(l.defects)?l.defects.join(", "):"";}},
   {k:"action",t:"Recommended action",v:c=>{const l=latest.get(c.id);return l?l.action:"";}},
   {k:"ni",t:"Inspections",cls:"n",v:c=>inspCount.get(c.id)||0},
+  {k:"nd",t:"Open defects",cls:"n",v:c=>{const s=defSummary.get(c.id);return s?s.open:0;}},
+  {k:"wcs",t:"Worst CS",v:c=>{const s=defSummary.get(c.id);return s?s.worst:null;},cell:c=>{const s=defSummary.get(c.id);return s?csChip(s.worst):el("span",{class:"note",text:"–"});}},
   {k:"np",t:"Photos",cls:"n",v:c=>photoCount.get(c.id)||0}];
 let tvSort={k:"id",dir:1};
 const inspCount=new Map(),photoCount=new Map();
@@ -832,16 +890,16 @@ function select(id,fly){
   const L=c.level;
   if((level!=="all"&&level!==L)||(fly&&level==="all"&&mode==="3d")){level=L;} // flying to a member inside the building: isolate its level so it can be seen
   if(!show[TYPES[c.type].group]){show[TYPES[c.type].group]=true;$("sh"+TYPES[c.type].group).checked=true;}
-  refreshAll();renderPanel();$("panel").hidden=false;
+  openCard=null;mv.temp=null;$("memberWin").hidden=false;refreshAll();renderPanel();mvOpen(id);
   if(fly)flyTo(center(c),mode==="plan"?null:140);
   try{history.replaceState(null,"","#"+id);}catch(e){}
 }
 function closePanel(){
-  if(!selected)return;selected=null;formOpen=false;$("panel").hidden=true;applyStyle();
+  if(!selected)return;selected=null;formOpen=false;mv.temp=null;mvSetPlacing(false);$("memberWin").hidden=true;applyStyle();
   try{history.replaceState(null,"",location.pathname+location.search);}catch(e){}
 }
 $("pClose").onclick=closePanel;
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(!$("lightbox").hidden)$("lightbox").hidden=true;else if(!$("csvbox").hidden)$("csvbox").hidden=true;else closePanel();}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(!$("lightbox").hidden)$("lightbox").hidden=true;else if(mv.placing){mvSetPlacing(false);}else if(!$("csvbox").hidden)$("csvbox").hidden=true;else closePanel();}});
 
 function compInspections(id){return inspections.filter(i=>i.componentId===id&&typeof i.rating==="number").sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.createdAt||"").localeCompare(String(a.createdAt||"")));}
 function compPhotos(id){return photos.filter(p=>p.componentId===id).sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")));}
@@ -873,6 +931,7 @@ function renderPanel(){
       el("div",{class:"lbl",text:r==null?"Not yet inspected":`NBI ${r} · ${NBI[r][0]}`}),
       el("div",{class:"when",text:r==null?"Add an inspection to rate this member.":NBI[r][1]}),
       el("div",{class:"when",text:l?`Inspected ${fmtDate(l.date)}${l.inspector?" by "+l.inspector:""}${l.action&&l.action!=="None"?" · "+l.action:""}`:""}))));
+  body.append(defectSection(c));
   // properties
   const dlp=el("dl",{class:"props"});
   dlp.append(el("dt",{text:"Component ID"}),el("dd",{class:"mono",text:c.id}));
@@ -890,9 +949,10 @@ function renderPanel(){
   const grid=el("div",{class:"photos"});
   for(const p of ph){
     const img=el("img",{alt:p.caption||"Photo of "+c.id,loading:"lazy"});
-    const b=el("button",{type:"button","aria-label":"Open photo"+(p.caption?": "+p.caption:"")},img);
+    const dch=p.defectId?defectChains(c.id).find(x=>x.obs.some(o=>o.id===p.defectId)):null;
+    const b=el("button",{type:"button","aria-label":"Open photo"+(p.caption?": "+p.caption:""),class:dch?"dphoto":""},img,dch?el("span",{class:"pin "+CS_CAT[dch.cur.cs]+" ptag",text:String(dch.num),title:"Defect "+dch.num}):null);
     photoBlobUrl(p).then(u=>{if(u)img.src=u;else{img.alt="Photo not available here (turn on GitHub sync to fetch it)";}});
-    b.onclick=async()=>{const u=await photoBlobUrl(p);if(!u)return;$("lbImg").src=u;$("lbImg").alt=p.caption||"";$("lbCap").textContent=`${c.id} · ${fmtDate(p.date)}${p.caption?" · "+p.caption:""}`;$("lightbox").hidden=false;};
+    b.onclick=async()=>{const u=await photoBlobUrl(p);if(!u)return;$("lbImg").src=u;$("lbImg").alt=p.caption||"";$("lbCap").textContent=`${c.id}${dch?" · defect "+dch.num+" ("+dch.cur.type+")":""} · ${fmtDate(p.date)}${p.caption?" · "+p.caption:""}`;$("lightbox").hidden=false;};
     grid.append(b);}
   body.append(el("div",{class:"p-sec"},el("h3",null,el("span",{text:`Photos (${ph.length})`}),canPhoto?addPhotoBtn:null),fileIn,
     ph.length?grid:el("p",{class:"empty",text:canPhoto?"No photos yet. Add photos from your phone or computer; they stay linked to this component.":"Photos need browser storage, which this browser has blocked."}),phMsg));
@@ -967,13 +1027,13 @@ async function shrink(file){
     return await new Promise(r=>cv.toBlob(b=>r(b||file),"image/jpeg",0.85));
   }catch(e){return file;}
 }
-async function uploadPhotos(cid,files,inspId,caption,progress){
+async function uploadPhotos(cid,files,inspId,caption,progress,defectId){
   let ok=0,fail=[];const date=new Date().toISOString().slice(0,10);
   for(let i=0;i<files.length;i++){
     progress(`Uploading photo ${i+1} of ${files.length}…`);
     try{
       const blob=await shrink(files[i]);
-      await savePhoto({componentId:cid,inspectionId:inspId||null,caption:caption||files[i].name.replace(/\.[^.]+$/,"").slice(0,200),date,createdAt:new Date().toISOString()},blob);
+      await savePhoto({componentId:cid,inspectionId:inspId||null,defectId:defectId||null,caption:caption||files[i].name.replace(/\.[^.]+$/,"").slice(0,200),date,createdAt:new Date().toISOString()},blob);
       ok++;
     }catch(err){fail.push(err&&err.code==="unsupported_type"?`${files[i].name} (format not supported, use JPEG or PNG)`:files[i].name);}
   }
@@ -982,6 +1042,289 @@ async function uploadPhotos(cid,files,inspId,caption,progress){
 }
 $("lbClose").onclick=()=>{$("lightbox").hidden=true;};
 $("lightbox").addEventListener("click",e=>{if(e.target.id==="lightbox")$("lightbox").hidden=true;});
+
+/* ---------------- Member view & located defects ----------------
+   Clicking a member opens the member window: the member alone in 3D (neighbours faint, nearby grid bubbles), the details panel
+   beside it. "Add defect" then a click on the surface drops a pin; the point is stored in the member's own coordinates
+   (location.lx/ly/lz, so it stays on the member) and described from the grid ("8′-3″ east of grid C · at line 4 · underside").
+   Each defect is a chain of observations, append-only like inspections: the first has rootId = id; a re-inspection adds a new
+   record with the same rootId and a status (Unchanged / Grown / Repaired / Not found). Photos can carry a defectId. */
+const CS={1:["CS1","Good","Sound, no or minor defects"],2:["CS2","Fair","Minor cracking, spalling or section loss; no effect on strength"],
+  3:["CS3","Poor","Moderate defects: spalls with exposed steel, wide cracks, section loss; strength may be affected"],
+  4:["CS4","Severe","Advanced deterioration affecting strength or serviceability; warrants structural review"]};
+const CS_CAT={1:"good",2:"fair",3:"poor",4:"serious"};
+const CS_HEX={1:0x3d8c58,2:0xc99a1e,3:0xd6702a,4:0xc23b34};
+const DSTAT=["Unchanged","Grown","Repaired","Not found"];
+const isOpen=d=>d.status!=="Repaired"&&d.status!=="Not found";
+const fmtFt=v=>{const s=v<0?"−":"";v=Math.abs(v);let f=Math.floor(v+1e-6),i=Math.round((v-f)*12);if(i===12){f++;i=0;}return `${s}${f}′-${i}″`;};
+let defects=[];
+function defectChains(cid){
+  const by=new Map();
+  for(const d of defects){if(d.componentId!==cid)continue;if(!by.has(d.rootId))by.set(d.rootId,[]);by.get(d.rootId).push(d);}
+  const ch=[...by.values()].map(obs=>{obs.sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.createdAt).localeCompare(String(b.createdAt)));
+    return {root:obs.find(o=>o.id===o.rootId)||obs[0],obs,cur:obs[obs.length-1]};});
+  ch.sort((a,b)=>String(a.root.createdAt).localeCompare(String(b.root.createdAt)));
+  ch.forEach((c,i)=>c.num=i+1);
+  return ch;
+}
+const defSummary=new Map();      // componentId -> {open, worst}
+function recomputeDefects(){
+  defSummary.clear();
+  const ids=new Set(defects.map(d=>d.componentId));
+  ids.forEach(cid=>{const ch=defectChains(cid).filter(c=>isOpen(c.cur));if(ch.length)defSummary.set(cid,{open:ch.length,worst:Math.max(...ch.map(c=>c.cur.cs))});});
+}
+async function saveDefect(doc){doc.id=newId("def");if(!doc.rootId)doc.rootId=doc.id;doc.synced=false;await idbPut("defects",doc);defects.push(doc);recompute();scheduleSync();return doc.id;}
+function cleanDefect(j,id){
+  if(!j||typeof j!=="object"||!byId.has(j.componentId))return null;
+  const cs=Number(j.cs);if(!Number.isInteger(cs)||cs<1||cs>4)return null;
+  const num=v=>{const n=Number(v);return Number.isFinite(n)?n:null;};
+  const L=j.location&&typeof j.location==="object"?j.location:{};
+  return {id,rootId:cleanStr(j.rootId,80)||id,prevId:cleanStr(j.prevId,80)||null,componentId:j.componentId,date:cleanStr(j.date,10),inspector:cleanStr(j.inspector,80),
+    type:cleanStr(j.type,80),cs,status:["New"].concat(DSTAT).includes(j.status)?j.status:"New",len:num(j.len),wid:num(j.wid),dep:num(j.dep),crack:num(j.crack),
+    location:{lx:num(L.lx)||0,ly:num(L.ly)||0,lz:num(L.lz)||0,nx:num(L.nx)||0,ny:num(L.ny)||0,nz:num(L.nz)||0,desc:cleanStr(L.desc,240),face:cleanStr(L.face,40),along:num(L.along)},
+    notes:cleanStr(j.notes,2000),createdAt:cleanStr(j.createdAt,30),device:cleanStr(j.device,40),synced:true};
+}
+
+/* --- member window 3D --- */
+const mv={ready:false,needs:true,placing:false,cid:null,mesh:null,temp:null,anim:null,neigh:true};
+function mvInit(){
+  if(mv.ready)return;mv.ready=true;
+  const host=$("mvStage");
+  mv.renderer=new THREE.WebGLRenderer({antialias:true});mv.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));host.appendChild(mv.renderer.domElement);
+  mv.scene=new THREE.Scene();mv.scene.add(new THREE.HemisphereLight(0xffffff,0x8a8f96,0.9));
+  const s=new THREE.DirectionalLight(0xffffff,0.5);s.position.set(-200,300,150);mv.scene.add(s);
+  const s2=new THREE.DirectionalLight(0xffffff,0.25);s2.position.set(150,-200,-100);mv.scene.add(s2);
+  mv.cam=new THREE.PerspectiveCamera(40,1,0.1,4000);
+  mv.ctl=new THREE.OrbitControls(mv.cam,mv.renderer.domElement);mv.ctl.addEventListener("change",()=>mv.needs=true);
+  mv.group=new THREE.Group();mv.pins=new THREE.Group();mv.scene.add(mv.group);mv.scene.add(mv.pins);
+  new ResizeObserver(mvResize).observe(host);
+  let dn=null;const cv=mv.renderer.domElement;
+  cv.addEventListener("pointerdown",e=>{dn={x:e.clientX,y:e.clientY};});
+  cv.addEventListener("pointerup",e=>{if(!dn)return;const mvd=Math.hypot(e.clientX-dn.x,e.clientY-dn.y);dn=null;if(mvd>5)return;mvClick(e);});
+  mvTheme();
+}
+function mvTheme(){if(!mv.ready)return;const cs=getComputedStyle(document.documentElement);mv.renderer.setClearColor(new THREE.Color(cs.getPropertyValue("--stage").trim()||"#dde1e6"));mv.needs=true;}
+function mvResize(){const h=$("mvStage"),w=h.clientWidth,ht=h.clientHeight;if(!w||!ht)return;mv.renderer.setSize(w,ht,false);mv.renderer.domElement.style.width=w+"px";mv.renderer.domElement.style.height=ht+"px";mv.cam.aspect=w/ht;mv.cam.updateProjectionMatrix();mv.needs=true;}
+function mvTick(){
+  if(!mv.ready||$("memberWin").hidden)return;
+  if(mv.anim){mv.anim.t=Math.min(1,mv.anim.t+0.07);const k=1-Math.pow(1-mv.anim.t,3);mv.anim.step(k);if(mv.anim.t>=1)mv.anim=null;mv.needs=true;}
+  if(mv.needs){mv.needs=false;mv.renderer.render(mv.scene,mv.cam);}
+}
+const neighMat=new THREE.MeshLambertMaterial({color:0xaab2bc,transparent:true,opacity:0.2,depthWrite:false,side:THREE.DoubleSide});
+const mvLine=new THREE.LineBasicMaterial({color:0x1b232d,transparent:true,opacity:0.55});
+function boxOf(m){if(!m.userData.box){m.updateMatrixWorld(true);m.userData.box=new THREE.Box3().setFromObject(m);}return m.userData.box;}
+const labelCache=new Map();
+function labelTex(txt,fill,stroke,fg){
+  const k=txt+fill+stroke+fg;if(labelCache.has(k))return labelCache.get(k);
+  const cv=document.createElement("canvas");cv.width=cv.height=96;const x=cv.getContext("2d");
+  x.fillStyle=fill;x.beginPath();x.arc(48,48,42,0,Math.PI*2);x.fill();x.lineWidth=7;x.strokeStyle=stroke;x.stroke();
+  x.fillStyle=fg;x.font="600 44px 'IBM Plex Sans', system-ui, sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText(txt,48,51);
+  const t=new THREE.CanvasTexture(cv);labelCache.set(k,t);return t;
+}
+function mvOpen(cid){
+  mvInit();const c=byId.get(cid),m=meshes.get(cid);if(!c||!m)return;
+  mv.cid=cid;mv.placing=false;mvSetPlacing(false);mv.temp=null;
+  while(mv.group.children.length)mv.group.remove(mv.group.children[0]);
+  m.updateMatrixWorld(true);
+  const mm=new THREE.Mesh(m.geometry,mat(TYPE_HEX[c.type]));mm.matrixAutoUpdate=false;mm.matrix.copy(m.matrixWorld);mm.userData.id=cid;
+  if(m.userData.line)mm.add(new THREE.LineSegments(m.userData.line.geometry,mvLine));
+  mv.group.add(mm);mm.updateMatrixWorld(true);mv.mesh=mm;
+  const box=new THREE.Box3().setFromObject(mm),sph=box.getBoundingSphere(new THREE.Sphere());mv.box=box;mv.R=Math.max(sph.radius,2);
+  // neighbours touching the member (faint)
+  const near=box.clone().expandByScalar(2.5),list=[];
+  meshes.forEach((om,oid)=>{if(oid===cid)return;const b=boxOf(om);if(b.intersectsBox(near))list.push([b.getCenter(new THREE.Vector3()).distanceTo(sph.center),om]);});
+  list.sort((a,b)=>a[0]-b[0]);
+  mv.neighGroup=new THREE.Group();list.slice(0,60).forEach(([,om])=>{const g=new THREE.Mesh(om.geometry,neighMat);g.matrixAutoUpdate=false;g.matrix.copy(om.matrixWorld);mv.neighGroup.add(g);});
+  mv.neighGroup.visible=mv.neigh;mv.group.add(mv.neighGroup);
+  // grid bubbles nearest the member
+  const cs=getComputedStyle(document.documentElement),fg=cs.getPropertyValue("--fg").trim()||"#1b232d",bg=cs.getPropertyValue("--surface").trim()||"#fff";
+  const sz=Math.max(1.2,mv.R*0.09),gx=MODEL.grid.x,gz=MODEL.grid.z,yb=box.min.y;
+  gx.filter(([,v])=>v>=box.min.x-mv.R*0.8&&v<=box.max.x+mv.R*0.8).forEach(([t,v])=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:labelTex(t,bg,fg,fg),depthTest:false}));s.scale.set(sz,sz,1);s.position.set(v,yb,box.min.z-sz*1.6);s.renderOrder=6;mv.group.add(s);});
+  gz.filter(([,v])=>v>=box.min.z-mv.R*0.8&&v<=box.max.z+mv.R*0.8).forEach(([t,v])=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:labelTex(t,bg,fg,fg),depthTest:false}));s.scale.set(sz,sz,1);s.position.set(box.min.x-sz*1.6,yb,v);s.renderOrder=6;mv.group.add(s);});
+  $("mvTitle").textContent=`${c.id} · ${TYPES[c.type].name}`;
+  mvView("above",true);mvPins();mvResize();
+}
+function mvView(which,instant){
+  const sph=mv.box.getBoundingSphere(new THREE.Sphere()),d=mv.R/Math.sin(mv.cam.fov*Math.PI/360)*1.15;
+  const dir=which==="below"?new THREE.Vector3(-0.55,-0.6,0.6):new THREE.Vector3(-0.6,0.55,0.75);dir.normalize();
+  const t1=sph.center.clone(),p1=sph.center.clone().addScaledVector(dir,d);
+  if(instant){mv.ctl.target.copy(t1);mv.cam.position.copy(p1);mv.ctl.update();mv.needs=true;return;}
+  mvFly(t1,p1);
+}
+function mvFly(t1,p1){const t0=mv.ctl.target.clone(),p0=mv.cam.position.clone();mv.anim={t:0,step(k){mv.ctl.target.copy(t0.clone().lerp(t1,k));mv.cam.position.copy(p0.clone().lerp(p1,k));mv.ctl.update();}};}
+function pinWorld(loc){return new THREE.Vector3(loc.lx,loc.ly,loc.lz).applyMatrix4(mv.mesh.matrixWorld);}
+function mvPins(){
+  if(!mv.ready||!mv.mesh)return;
+  while(mv.pins.children.length)mv.pins.remove(mv.pins.children[0]);
+  const s=Math.max(1.3,mv.R*0.08);
+  defectChains(mv.cid).forEach(ch=>{
+    const L=ch.cur.location,p=pinWorld(L).add(new THREE.Vector3(L.nx,L.ny,L.nz).multiplyScalar(s*0.45));
+    const col="#"+CS_HEX[ch.cur.cs].toString(16).padStart(6,"0"),open=isOpen(ch.cur);
+    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:labelTex(String(ch.num),open?col:"#ffffff",open?"#ffffff":col,open?"#ffffff":col),depthTest:false,opacity:open?1:0.75,transparent:true}));
+    sp.scale.set(s,s,1);sp.position.copy(p);sp.renderOrder=10;sp.userData.root=ch.root.id;mv.pins.add(sp);
+  });
+  if(mv.temp){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:labelTex("+","#1e5aa0","#ffffff","#ffffff"),depthTest:false}));sp.scale.set(s,s,1);sp.position.copy(mv.temp.world);sp.renderOrder=11;mv.pins.add(sp);}
+  mv.needs=true;
+}
+function mvSetPlacing(on){mv.placing=on;const h=$("mvHint");h.textContent=on?"Click on the member where the defect is (Esc to cancel)":"Drag to orbit · right-drag to pan · scroll to zoom · click a pin to open its defect";h.classList.toggle("placing",on);if(mv.ready)mv.renderer.domElement.style.cursor=on?"crosshair":"";$("mvAdd").setAttribute("aria-pressed",String(on));}
+function mvClick(e){
+  const r=mv.renderer.domElement.getBoundingClientRect(),nd=new THREE.Vector2(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);
+  const rc=new THREE.Raycaster();rc.setFromCamera(nd,mv.cam);rc.camera=mv.cam;
+  if(!mv.placing){const hp=rc.intersectObjects(mv.pins.children,false)[0];if(hp&&hp.object.userData.root)showDefectCard(hp.object.userData.root);return;}
+  const hit=rc.intersectObject(mv.mesh,false)[0];if(!hit)return;
+  const local=mv.mesh.worldToLocal(hit.point.clone());
+  const nW=hit.face?hit.face.normal.clone().transformDirection(mv.mesh.matrixWorld).normalize():new THREE.Vector3(0,1,0);
+  const nL=hit.face?hit.face.normal.clone():new THREE.Vector3(0,1,0);
+  const where=describeLoc(byId.get(mv.cid),hit.point,nW,local,nL);
+  mv.temp={world:hit.point.clone().addScaledVector(nW,Math.max(1.3,mv.R*0.08)*0.45),loc:{lx:+local.x.toFixed(3),ly:+local.y.toFixed(3),lz:+local.z.toFixed(3),nx:+nW.x.toFixed(3),ny:+nW.y.toFixed(3),nz:+nW.z.toFixed(3),desc:where.desc,face:where.face,along:where.along}};
+  mvSetPlacing(false);mvPins();openDefectForm(byId.get(mv.cid),null);
+}
+function gridRef(v,list,pos,neg,word){
+  const s=list.slice().sort((a,b)=>a[1]-b[1]);let near=s[0];s.forEach(g=>{if(Math.abs(g[1]-v)<Math.abs(near[1]-v))near=g;});
+  if(Math.abs(near[1]-v)<1.0)return `at ${word} ${near[0]}`;
+  let lo=null;s.forEach(g=>{if(g[1]<=v)lo=g;});
+  if(lo)return `${fmtFt(v-lo[1])} ${pos} of ${word} ${lo[0]}`;
+  return `${fmtFt(s[0][1]-v)} ${neg} of ${word} ${s[0][0]}`;
+}
+function describeLoc(c,p,nW,local,nL){
+  const gb=mv.mesh.geometry.boundingBox||(mv.mesh.geometry.computeBoundingBox(),mv.mesh.geometry.boundingBox);
+  const ext=[gb.max.x-gb.min.x,gb.max.y-gb.min.y,gb.max.z-gb.min.z],ax=ext.indexOf(Math.max(...ext)),key="xyz"[ax];
+  const axisW=new THREE.Vector3(ax===0?1:0,ax===1?1:0,ax===2?1:0).transformDirection(mv.mesh.matrixWorld);
+  const along=local[key]-gb.min[key],L=ext[ax];
+  let face;
+  if(Math.abs(nL[key])>0.7&&c.g&&c.g.k==="bar")face="end face";
+  else if(nW.y>0.7)face="top";else if(nW.y<-0.7)face="underside";
+  else face=Math.abs(nW.x)>Math.abs(nW.z)?(nW.x>0?"east face":"west face"):(nW.z>0?"north face":"south face");
+  const vertical=Math.abs(axisW.y)>0.8;
+  const parts=[gridRef(p.x,MODEL.grid.x,"east","west","grid"),gridRef(p.z,MODEL.grid.z,"north","south","line")];
+  let alongTxt;
+  if(vertical)alongTxt=`${fmtFt(p.y-mv.box.min.y)} above the base`;
+  else{const end=axisW.x*(axisW.x>0?1:-1)>Math.abs(axisW.z)?(axisW.x>0?"west":"east"):(axisW.z>0?"south":"north");alongTxt=`${fmtFt(along)} from the ${end} end (of ${fmtFt(L)})`;}
+  return {face,along:+along.toFixed(2),desc:`${parts.join(" · ")} · ${face} · ${alongTxt} · El. ${(p.y+MODEL.elev0).toFixed(1)}`};
+}
+
+/* --- defect UI in the details panel --- */
+let openCard=null;
+function showDefectCard(rootId){
+  openCard=rootId;renderPanel();
+  const n=document.querySelector(`[data-root="${rootId}"]`);if(n){n.scrollIntoView({block:"nearest",behavior:"smooth"});}
+  const ch=defectChains(mv.cid).find(c=>c.root.id===rootId);if(ch&&mv.ready){const L=ch.cur.location,p=pinWorld(L),n2=new THREE.Vector3(L.nx,L.ny,L.nz);
+    const d=Math.min(mv.R*1.4,Math.max(8,mv.R*0.9));mvFly(p,p.clone().addScaledVector(n2.lengthSq()>0.1?n2:new THREE.Vector3(0,1,0),d).add(new THREE.Vector3(0,d*0.25,0)));}
+}
+function chainPhotos(ch){const ids=new Set(ch.obs.map(o=>o.id));return photos.filter(p=>p.defectId&&ids.has(p.defectId)).sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")));}
+function sizeTxt(d){const f=(v,u)=>v==null||v===""?null:`${v} ${u}`;return [f(d.len,"in long"),f(d.wid,"in wide"),f(d.dep,"in deep"),d.crack!=null&&d.crack!==""?`crack ${d.crack} in`:null].filter(Boolean).join(", ");}
+function csChip(cs,hollow){return el("span",{class:"rate "+CS_CAT[cs]+(hollow?" hollow":""),text:"CS"+cs,title:`${CS[cs][0]} · ${CS[cs][1]}`});}
+function photoThumbs(list,c,label){
+  const g=el("div",{class:"photos"});
+  list.forEach(p=>{const img=el("img",{alt:p.caption||"Defect photo",loading:"lazy"});const b=el("button",{type:"button","aria-label":"Open photo"},img);
+    photoBlobUrl(p).then(u=>{if(u)img.src=u;});
+    b.onclick=async()=>{const u=await photoBlobUrl(p);if(!u)return;$("lbImg").src=u;$("lbCap").textContent=`${c.id}${label?" · "+label:""} · ${fmtDate(p.date)}${p.caption?" · "+p.caption:""}`;$("lightbox").hidden=false;};g.append(b);});
+  return g;
+}
+function defectSection(c){
+  const sec=el("div",{class:"p-sec",id:"defSec"});
+  const ch=defectChains(c.id),open=ch.filter(x=>isOpen(x.cur));
+  const add=el("button",{class:"btn primary",type:"button",text:"Add defect"});add.onclick=()=>{mvSetPlacing(true);};
+  sec.append(el("h3",null,el("span",{text:`Defects (${open.length} open${ch.length>open.length?`, ${ch.length-open.length} closed`:""})`}),add));
+  if(!ch.length){sec.append(el("p",{class:"empty",text:"No defects recorded. Press Add defect, then click on the member in the 3D view where the defect is."}));return sec;}
+  const ul=el("ul",{class:"dlist"});
+  ch.forEach(x=>{
+    const d=x.cur,isO=isOpen(d),exp=openCard===x.root.id;
+    const li=el("li",{class:"dcard"+(exp?" open":""),"data-root":x.root.id});
+    const head=el("button",{type:"button",class:"dhead"},el("span",{class:"pin "+CS_CAT[d.cs]+(isO?"":" hollow"),text:String(x.num)}),
+      el("span",{class:"dmain"},el("span",{class:"dt",text:`${d.type}${isO?"":" · "+d.status.toLowerCase()}`}),el("span",{class:"dl",text:d.location.desc})),csChip(d.cs,!isO));
+    head.onclick=()=>{openCard=exp?null:x.root.id;if(!exp)showDefectCard(x.root.id);else renderPanel();};
+    li.append(head);
+    if(exp){
+      const dl=el("dl",{class:"props"});
+      const row=(k,v)=>{if(v)dl.append(el("dt",{text:k}),el("dd",{text:v}));};
+      row("Condition",`${CS[d.cs][0]} · ${CS[d.cs][1]} — ${CS[d.cs][2]}`);row("Size",sizeTxt(d));row("Location",d.location.desc);row("Last seen",`${fmtDate(d.date)}${d.inspector?" by "+d.inspector:""} (${d.status})`);row("Notes",d.notes);
+      li.append(dl);
+      const ph=chainPhotos(x);if(ph.length)li.append(photoThumbs(ph,c,"Defect "+x.num));
+      if(x.obs.length>1){const h=el("ol",{class:"dhist"});x.obs.slice().reverse().forEach(o=>h.append(el("li",{text:`${fmtDate(o.date)} · ${o.status} · CS${o.cs}${sizeTxt(o)?" · "+sizeTxt(o):""}${o.inspector?" · "+o.inspector:""}`})));li.append(el("div",{class:"note",text:"History"}),h);}
+      const fi=el("input",{type:"file",accept:"image/*",multiple:"",hidden:""}),msg=el("p",{class:"note"});
+      const bP=el("button",{class:"btn",type:"button",text:"Add photo"});bP.onclick=()=>fi.click();
+      fi.onchange=async()=>{const fl=[...fi.files];if(!fl.length)return;msg.textContent=await uploadPhotos(c.id,fl,null,"",m=>msg.textContent=m,d.id);};
+      const bR=el("button",{class:"btn",type:"button",text:"Re-inspect"});bR.onclick=()=>openDefectForm(c,x);
+      li.append(el("div",{class:"row"},bR,bP),fi,msg);
+    }
+    ul.append(li);
+  });
+  sec.append(ul);return sec;
+}
+function openDefectForm(c,chain){
+  formOpen=true;
+  const prev=chain?chain.cur:null;
+  const today=new Date(),iso=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);
+  const typeSel=el("select",{id:"dType",required:""});typeSel.append(el("option",{value:"",text:"Choose a defect"}));
+  defectsFor(c).concat(["Other"]).forEach(t=>typeSel.append(el("option",{value:t,text:t})));
+  const csSel=el("select",{id:"dCS",required:""});csSel.append(el("option",{value:"",text:"Choose a condition state"}));
+  [1,2,3,4].forEach(k=>csSel.append(el("option",{value:String(k),text:`${CS[k][0]} · ${CS[k][1]} — ${CS[k][2]}`})));
+  const stSel=el("select",{id:"dStatus"});DSTAT.forEach(s=>stSel.append(el("option",{value:s,text:s})));
+  const num=(id,lab,v)=>el("label",null,lab,el("input",{type:"number",id,min:"0",step:"0.05",inputmode:"decimal",value:v==null?"":String(v)}));
+  const loc=chain?prev.location:mv.temp.loc;
+  const locIn=el("input",{type:"text",id:"dLoc",maxlength:"240",value:loc.desc});
+  const files=el("input",{type:"file",accept:"image/*",multiple:"",id:"dPhotos"});
+  const cam=el("input",{type:"file",accept:"image/*",capture:"environment",hidden:"",id:"dCam"});
+  const camB=el("button",{class:"btn",type:"button",text:"Take photo"});camB.onclick=()=>cam.click();
+  const picked=el("p",{class:"note"});const showPicked=()=>{const n=files.files.length+cam.files.length;picked.textContent=n?`${n} photo${n>1?"s":""} will be attached to this defect.`:"";};
+  files.onchange=showPicked;cam.onchange=showPicked;
+  const msg=el("p",{class:"note"}),save=el("button",{class:"btn primary",type:"submit",text:chain?"Save re-inspection":"Save defect"}),cancel=el("button",{class:"btn",type:"button",text:"Cancel"});
+  const f=el("form",{class:"insp"},el("strong",{text:chain?`Re-inspect defect ${chain.num}: ${prev.type}`:"New defect"}),
+    el("div",{class:"two"},el("label",null,"Date",el("input",{type:"date",id:"dDate",value:iso,required:""})),el("label",null,"Inspector",el("input",{type:"text",id:"dInsp",required:"",maxlength:"80",value:lastInspector||""}))),
+    chain?el("label",null,"Status since last inspection",stSel):el("label",null,"Defect",typeSel),
+    el("label",null,"Condition state (AASHTO)",csSel),
+    el("div",{class:"two"},num("dLen","Length (in)",prev&&prev.len),num("dWid","Width (in)",prev&&prev.wid)),
+    el("div",{class:"two"},num("dDep","Depth (in)",prev&&prev.dep),num("dCrack","Crack width (in)",prev&&prev.crack)),
+    el("label",null,"Location on the member",locIn),
+    el("label",null,"Notes",el("textarea",{id:"dNotes",maxlength:"2000",placeholder:"Extent, exposed steel, section loss, cause"})),
+    el("label",null,"Photos of this defect",files),el("div",{class:"row"},camB),cam,picked,
+    el("div",{class:"row"},save,cancel),msg);
+  if(prev)csSel.value=String(prev.cs);
+  cancel.onclick=()=>{formOpen=false;mv.temp=null;mvPins();renderPanel();};
+  f.addEventListener("submit",async e=>{
+    e.preventDefault();
+    if(!chain&&!typeSel.value){typeSel.focus();return;}
+    const cs=parseInt(csSel.value,10);if(isNaN(cs)){csSel.focus();return;}
+    const nv=id=>{const v=f.querySelector("#"+id).value;return v===""?null:Number(v);};
+    const doc={componentId:c.id,date:f.querySelector("#dDate").value,inspector:f.querySelector("#dInsp").value.trim(),type:chain?prev.type:typeSel.value,cs,
+      status:chain?stSel.value:"New",len:nv("dLen"),wid:nv("dWid"),dep:nv("dDep"),crack:nv("dCrack"),location:Object.assign({},loc,{desc:locIn.value.trim()||loc.desc}),
+      notes:f.querySelector("#dNotes").value.trim(),createdAt:new Date().toISOString()};
+    if(chain){doc.rootId=chain.root.id;doc.prevId=prev.id;}
+    lastInspector=doc.inspector;save.disabled=true;msg.textContent="Saving…";
+    let id;try{id=await saveDefect(doc);}catch(err){save.disabled=false;msg.className="err";msg.textContent="Couldn't save the defect in this browser. Try again.";return;}
+    const fl=[...files.files,...cam.files];
+    if(fl.length)msg.textContent=await uploadPhotos(c.id,fl,null,"",m=>msg.textContent=m,id);
+    formOpen=false;mv.temp=null;openCard=doc.rootId||id;mvPins();renderPanel();
+  });
+  const sec=$("defSec");const wrap=el("div",{class:"p-sec",id:"defSec"},f);
+  if(sec)sec.replaceWith(wrap);else $("pBody").prepend(wrap);
+  wrap.scrollIntoView({block:"nearest"});setTimeout(()=>(chain?stSel:typeSel).focus(),0);
+}
+
+/* --- defect badges on the main model --- */
+const badges=new THREE.Group();scene.add(badges);
+function renderBadges(){
+  while(badges.children.length)badges.remove(badges.children[0]);
+  defSummary.forEach((s,cid)=>{
+    const m=meshes.get(cid);if(!m||!m.visible||m.material===ghostMat)return;
+    const b=boxOf(m),p=b.getCenter(new THREE.Vector3());p.y=b.max.y+1.5;
+    const col="#"+CS_HEX[s.worst].toString(16).padStart(6,"0");
+    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:labelTex(String(s.open),col,"#ffffff","#ffffff"),depthTest:false}));
+    sp.scale.set(5,5,1);sp.position.copy(p);sp.renderOrder=8;badges.add(sp);
+  });
+}
+function defCsv(){
+  const rows=[["DefectID","Observation","ComponentID","MemberType","Level","Date","Inspector","Defect","Status","ConditionState","Length_in","Width_in","Depth_in","CrackWidth_in","Location","Face","Notes","PhotoCount"]];
+  const roots=new Map();defects.forEach(d=>{if(!roots.has(d.componentId))roots.set(d.componentId,defectChains(d.componentId));});
+  roots.forEach((chs,cid)=>{const c=byId.get(cid);chs.forEach(ch=>ch.obs.forEach((o,i)=>rows.push([`${cid}#${ch.num}`,i+1,cid,c?TYPES[c.type].name:"",c?c.level:"",o.date,o.inspector,o.type,o.status,"CS"+o.cs,o.len,o.wid,o.dep,o.crack,o.location.desc,o.location.face,o.notes,photos.filter(p=>p.defectId===o.id).length])));});
+  return toCsv(rows);
+}
+
+$("mvAdd").onclick=()=>mvSetPlacing(!mv.placing);
+$("mvAbove").onclick=()=>mvView("above");$("mvBelow").onclick=()=>mvView("below");
+$("mvNeigh").onchange=e=>{mv.neigh=e.target.checked;if(mv.neighGroup)mv.neighGroup.visible=mv.neigh;mv.needs=true;};
+mvSetPlacing(false);
 
 /* ---------------- CSV export ---------------- */
 const q=v=>{const s=v==null?"":String(v);return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
@@ -1006,6 +1349,7 @@ async function offer(name,text){
 }
 $("expComp").onclick=()=>offer("Garage_Components.csv",compCsv());
 $("expInsp").onclick=()=>offer("Garage_Inspections.csv",inspCsv());
+$("expDef").onclick=()=>offer("Garage_Defects.csv",defCsv());
 $("csvClose").onclick=()=>{$("csvbox").hidden=true;};
 $("csvCopy").onclick=()=>{const t=$("csvText");navigator.clipboard.writeText(t.value).then(()=>{$("csvCopy").textContent="Copied";},()=>{t.select();});};
 

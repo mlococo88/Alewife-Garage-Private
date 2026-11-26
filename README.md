@@ -24,3 +24,11 @@ Saved in the browser first (IndexedDB `garageAsset.alewife.v1`), then, with Clou
 
 ## Assumptions to verify
 See "About this model" in the app. Main items: drum ramp elevations interpolated between the leader readings; lobby roof truss layout simplified; exit legs and lanes approximate; tank outline along the tunnel approximate; lobby foundation walls MF-1–MF-47 and stairs 16, 23, 30 not modelled.
+
+## Member view and located defects (2026-11-26)
+Clicking a member opens a member window: the member alone in 3D (neighbours faint, nearby grid bubbles, views from above / below) beside its details.
+- **Add defect**, then click on the member: a pin is dropped and the location is described from the grid, face and distance along the member (editable).
+- Each defect has a type, AASHTO condition state CS1–CS4, size (length, width, depth, crack width), notes and its own photos (file or camera).
+- **Re-inspect** adds a new observation (Unchanged / Grown / Repaired / Not found) with its own condition state, size and photos; the full history is kept.
+- Pins are numbered and coloured by condition state; the main model shows a badge with the open-defect count on each member; the table has Open defects and Worst CS columns; **Defect log** exports every observation to CSV.
+- Stored in IndexedDB (store "defects", database version 2) and synced to `garage-assets/alewife/defects/<id>.json`; defect photos sync with the other photos and carry `defectId`.
