@@ -11,7 +11,7 @@ Download the repository (Code → Download ZIP, or clone it) and double-click `i
 | File | What it is |
 |---|---|
 | `index.html` | The app (same engine as All-Structural `apps/garage-asset/`, loading the model from `model.js`) |
-| `model.js` | The Alewife model: grid, levels and all 3,001 members, with the sheet each comes from |
+| `model.js` | The Alewife model: grid, levels and all 3,016 members, with the sheet each comes from |
 | `github-sync.js` | Copy of All-Structural `shared/github-sync.js` (Cloud sync settings and GitHub client) |
 
 ## Where inspections and photos go
@@ -19,11 +19,11 @@ Saved in the browser first (IndexedDB `garageAsset.alewife.v1`), then, with Clou
 
 ## Model content
 - Garage block: steel W14 columns (S148), precast beams PB on the numbered lines (S152), edge girders / spandrels GB, the cast-in-place girder on line 12 at Level 3 (S153), precast double tees (S174), the sloped ramp bay 2.1–2.9, the light well 5–6.
-- Two double-helix drum ramps: exit (Ramps C and D) west of line A, entrance (Ramps A and B) east of line K (S114–S125, S149, S160, S161), and the links along lines 11.5–12 joining each drum to the garage at Levels 2–5 (entrance bridge on columns at M, N, P, Q; S118, S162).
+- Two double-helix drum ramps: exit (Ramps C and D) west of line A, entrance (Ramps A and B) east of line K (S114–S125, S149, S160, S161), and the links joining each drum to the garage at Levels 3–5: the entrance bridge with its bump-out to line 11.2, deep beams under Level 3 and 18 ft transverse beams at Levels 4–5 (S116–S119, S162).
 - Lobby / mezzanine, flood storage tank and bus platform as simplified blocks.
 
 ## Assumptions to verify (also shown in the app, "About this model")
-- Level elevations: L1 El. 117.5, L2 El. 131.0, then 10 ft floor to floor (L3 141.0, L4 151.0, L5 161.0). Not found on the sheets.
+- Level elevations: L1 El. 117.5 (S104), L3 El. 148.0 (S116), L5 El. 172.0 (S117), 12 ft floor to floor; L2 El. 136.0 by extension (verify).
 - Column sizes transcribed from the scanned S148 schedule.
 - Ramp bay slope direction (rises from line B to line K) read from the "ramp up / ramp down" notes.
 - Drum geometry: outer radius 61 ft, inner edge 36 ft, on grids A1 and R, tangent to line 12; ramp elevations between levels interpolated.
