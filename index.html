@@ -231,6 +231,9 @@ legend{font-size:12px;color:var(--muted);padding:0 4px}
 .vchip .btn{padding:3px 10px}
 @keyframes vpulse{50%{opacity:.35}}
 .chip.demo{border-color:var(--fair);color:var(--fg);background:color-mix(in srgb,var(--fair) 18%,var(--surface))}
+.aerpad{border:1px solid var(--line);border-radius:6px;padding:8px;margin-top:8px}
+.aergrid{display:grid;grid-template-columns:repeat(4,auto);gap:6px;justify-content:start}
+.aergrid .btn{min-width:40px}
 .vlist{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:5px;font-size:12.5px}
 .vlist li{display:grid;grid-template-columns:auto 1fr;gap:8px}.vlist .vd{font-variant-numeric:tabular-nums;font-weight:500}.vlist .vt{color:var(--muted)}
 #csvbox{position:fixed;inset:0;background:rgba(8,12,16,.6);display:grid;place-items:center;z-index:50;padding:24px}
@@ -274,6 +277,24 @@ legend{font-size:12px;color:var(--muted);padding:0 4px}
     <section>
       <h2>Show</h2>
       <div class="checks" id="showBox"></div>
+    </section>
+    <section>
+      <h2>Aerial photo</h2>
+      <div class="row" style="align-items:center"><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="aerOn"> Show aerial photo</label><button class="btn" type="button" id="aerAlign">Align photo</button></div>
+      <div id="aerPad" hidden class="aerpad">
+        <p class="note" style="margin:6px 0">Move and rotate the photo until the garage sits on it (look from above, Floor plan view helps). Step:
+          <select id="aerStep" aria-label="Step"><option value="1">1 ft / 0.2°</option><option value="5" selected>5 ft / 1°</option><option value="25">25 ft / 1°</option></select></p>
+        <div class="aergrid">
+          <button class="btn" type="button" data-m="0,-1,0" title="Move photo up (plan)">↑</button>
+          <button class="btn" type="button" data-m="-1,0,0" title="Move photo left">←</button><button class="btn" type="button" data-m="1,0,0" title="Move photo right">→</button>
+          <button class="btn" type="button" data-m="0,1,0" title="Move photo down">↓</button>
+          <button class="btn" type="button" data-m="0,0,-1" title="Rotate anticlockwise">⟲</button><button class="btn" type="button" data-m="0,0,1" title="Rotate clockwise">⟳</button>
+        </div>
+        <p class="note mono" id="aerRead"></p>
+        <div class="row"><button class="btn" type="button" id="aerCopy">Copy numbers</button><button class="btn" type="button" id="aerReset">Reset</button></div>
+        <p class="note">Send me the numbers once it lines up and I'll make them the default for everyone.</p>
+      </div>
+      <p class="note" id="aerNote"></p>
     </section>
     <section>
       <h2>Color by</h2>
@@ -762,7 +783,7 @@ function applyStyle(){
   const by=level==="all"?0:levelElev(level);
   bubbles.children.forEach(s=>s.position.y=mode==="plan"?by+4:0.5);
   bubbles.visible=(mode==="plan"||level==="all"||level===1)||true;
-  slab.visible=mode!=="plan";
+  slab.visible=mode!=="plan";if(window.__aerUpd)window.__aerUpd();
   renderBadges();
   req();
 }
@@ -822,6 +843,67 @@ function resetView(){
   else{const y=level==="all"?CENTER.y:levelElev(level)+4;ctl3.target.set(CENTER.x,y,CENTER.z);persp.position.set(CENTER.x-SPAN*0.95,y+SPAN*0.7,CENTER.z+SPAN*0.95);ctl3.update();}
   req();
 }
+
+/* ---------------- Aerial photo ground (MassGIS 2023 orthoimagery, loaded in the viewer's browser) ----------------
+   Georeference: model point (x, z) in feet maps to the ground by an anchor (lat/lon of grid A-1, the model origin) and a
+   rotation (degrees clockwise from north of the model's "up" direction in plan, i.e. −z). Defaults are a first guess;
+   "Align photo" lets the user move and rotate it; the result is kept in this browser and shown so it can be built in. */
+const AER_URL="https://tiles.arcgis.com/tiles/hGdibHYSPO59RG1h/arcgis/rest/services/orthos2023/MapServer/tile/";
+const GEO_DEFAULT={lat:42.39605,lon:-71.14212,rot:0};
+const GEO_KEY="garageAsset."+PROJECT+".geo";
+let geo=Object.assign({},GEO_DEFAULT);
+try{const g=JSON.parse(localStorage.getItem(GEO_KEY)||"null");if(g&&isFinite(g.lat)&&isFinite(g.lon)&&isFinite(g.rot))geo=g;}catch(e){}
+const aer={mesh:null,tex:null,ok:0,fail:0,on:true};
+try{aer.on=localStorage.getItem(GEO_KEY+".on")!=="0";}catch(e){}
+function modelToLL(x,z){
+  const r=geo.rot*Math.PI/180,E0=x,N0=-z;                       // model plan: +x right, −z up
+  const E=(E0*Math.cos(r)+N0*Math.sin(r))*0.3048,N=(-E0*Math.sin(r)+N0*Math.cos(r))*0.3048;
+  const kLat=111132.92-559.82*Math.cos(2*geo.lat*Math.PI/180),kLon=111412.84*Math.cos(geo.lat*Math.PI/180);
+  return [geo.lon+E/kLon,geo.lat+N/kLat];
+}
+const merc=(lon,lat,z)=>{const s=256*2**z,r=lat*Math.PI/180;return [(lon+180)/360*s,(1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*s];};
+function buildAerial(){
+  if(aer.mesh){scene.remove(aer.mesh);aer.mesh.geometry.dispose();aer.mesh.material.dispose();if(aer.tex)aer.tex.dispose();aer.mesh=null;}
+  const pad=160,x0=BB.min.x-pad,x1=BB.max.x+pad,z0=BB.min.z-pad,z1=BB.max.z+pad,Z=19,NS=24;
+  let px0=1e15,py0=1e15,px1=-1e15,py1=-1e15;
+  [[x0,z0],[x0,z1],[x1,z0],[x1,z1]].forEach(([x,z])=>{const [px,py]=merc(...modelToLL(x,z),Z);px0=Math.min(px0,px);py0=Math.min(py0,py);px1=Math.max(px1,px);py1=Math.max(py1,py);});
+  const tx0=Math.floor(px0/256),ty0=Math.floor(py0/256),tx1=Math.floor(px1/256),ty1=Math.floor(py1/256);
+  const W=(tx1-tx0+1)*256,H=(ty1-ty0+1)*256,cv=document.createElement("canvas");cv.width=W;cv.height=H;
+  const ctx=cv.getContext("2d");ctx.fillStyle="#9a9a90";ctx.fillRect(0,0,W,H);
+  const tex=new THREE.CanvasTexture(cv);tex.anisotropy=8;tex.flipY=false;aer.tex=tex;
+  const pos=[],uv=[],idx=[];
+  for(let j=0;j<=NS;j++)for(let i=0;i<=NS;i++){const x=x0+(x1-x0)*i/NS,z=z0+(z1-z0)*j/NS,[px,py]=merc(...modelToLL(x,z),Z);pos.push(x,-0.35,z);uv.push((px-tx0*256)/W,(py-ty0*256)/H);}
+  for(let j=0;j<NS;j++)for(let i=0;i<NS;i++){const a=j*(NS+1)+i,b=a+1,c=a+NS+1,d=c+1;idx.push(a,c,b,b,c,d);}
+  const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));g.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();
+  aer.mesh=new THREE.Mesh(g,new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));aer.mesh.renderOrder=-1;scene.add(aer.mesh);
+  aer.ok=0;aer.fail=0;
+  for(let ty=ty0;ty<=ty1;ty++)for(let tx=tx0;tx<=tx1;tx++){const img=new Image();img.crossOrigin="anonymous";
+    img.onload=()=>{ctx.drawImage(img,(tx-tx0)*256,(ty-ty0)*256);tex.needsUpdate=true;aer.ok++;aerUpdate();req();};
+    img.onerror=()=>{aer.fail++;aerUpdate();};img.src=AER_URL+Z+"/"+ty+"/"+tx;}
+  aerUpdate();
+}
+function aerUpdate(){
+  const show=aer.on&&aer.ok>0;if(aer.mesh)aer.mesh.visible=aer.on&&mode!=="plan"||aer.on&&mode==="plan";
+  slab.visible=!show&&mode!=="plan";
+  const n=$("aerNote");if(n)n.textContent=!aer.on?"Aerial photo off.":aer.ok?`Imagery: MassGIS 2023 orthos. Alignment: lat ${geo.lat.toFixed(6)}, lon ${geo.lon.toFixed(6)}, rotation ${geo.rot.toFixed(1)}°.`:aer.fail>4?"The aerial photo can't load here (outside images are blocked). Open the GitHub Pages link in a normal browser.":"Loading aerial photo…";
+  $("aerRead").textContent=`lat ${geo.lat.toFixed(6)} · lon ${geo.lon.toFixed(6)} · rotation ${geo.rot.toFixed(1)}°`;
+  req();
+}
+function aerSave(){try{localStorage.setItem(GEO_KEY,JSON.stringify(geo));}catch(e){}}
+function aerMove(dx,dz,drot){
+  if(drot){geo.rot=((geo.rot+drot)%360+360)%360;}
+  if(dx||dz){ // move the photo under the model by (dx, dz) feet of model plan: shift the anchor the opposite way
+    const [lon1,lat1]=modelToLL(-dx,-dz);geo.lon=lon1;geo.lat=lat1;}
+  aerSave();buildAerial();
+}
+$("aerOn").checked=aer.on;
+$("aerOn").addEventListener("change",e=>{aer.on=e.target.checked;try{localStorage.setItem(GEO_KEY+".on",aer.on?"1":"0");}catch(x){}aerUpdate();});
+$("aerAlign").onclick=()=>{$("aerPad").hidden=!$("aerPad").hidden;};
+document.querySelectorAll("#aerPad [data-m]").forEach(b=>b.addEventListener("click",()=>{const [dx,dz,dr]=b.dataset.m.split(",").map(Number);const k=+$("aerStep").value;aerMove(dx*k,dz*k,dr*(k>=5?1:0.2));}));
+$("aerReset").onclick=()=>{geo=Object.assign({},GEO_DEFAULT);aerSave();buildAerial();};
+$("aerCopy").onclick=()=>{const t=`lat ${geo.lat.toFixed(6)}, lon ${geo.lon.toFixed(6)}, rotation ${geo.rot.toFixed(1)}`;navigator.clipboard.writeText(t).then(()=>{$("aerCopy").textContent="Copied";setTimeout(()=>$("aerCopy").textContent="Copy numbers",1500);},()=>{});};
+buildAerial();
+window.__aerUpd=aerUpdate;
 
 /* ---------------- Picking ---------------- */
 const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
