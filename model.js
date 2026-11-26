@@ -72,6 +72,8 @@
       LW: { name: 'Lobby wall', group: 'LOBBY', material: 'concrete', color: 0x98a796 },
       LT: { name: 'Lobby roof truss (steel pipe)', group: 'LOBBY', material: 'steel', color: 0x6f8a7a },
       ET: { name: 'Escalator truss (steel)', group: 'LOBBY', material: 'steel', color: 0x5f7a6a },
+      LG: { name: 'Lobby glazing', group: 'LOBBY', material: 'glass', color: 0x9fd0ea },
+      LRD: { name: 'Lobby roof deck', group: 'LOBBY', material: 'steel', color: 0xb9c4b7 },
       PED: { name: 'Pedestrian bridge (precast)', group: 'LOBBY', material: 'precast', color: 0xb8c6b4 },
       TS: { name: 'Flood storage tank roof slab', group: 'SITE', material: 'concrete', color: 0x9fb2b8 },
       TB: { name: 'Flood storage tank roof beam', group: 'SITE', material: 'concrete', color: 0x8fa3aa },
@@ -100,6 +102,7 @@
       'Internal ramps: bay 2.1–2.9 rises from line B (level n) to line J (level n+1), 5.1%; flat landing in J–K, bay 2–3, at every level (S106–S113). Ramp 1 arrives at Level 2 from the South Ramp.',
       'Drum ramps: double helix, about 24 ft rise per turn; ramps start on their grade legs; elevations read from the radial leaders on S115–S125 and interpolated between them.',
       'Skylight: eaves on the W18 beams at El. 184.67 (S158 / S178; not stated on S138); gable profile from aerial imagery, ridge assumed 9 ft above the eaves.',
+      'Lobby roof: four areas laid out from S128 with truss elevations from S142 / S143 (glass triangle to El. 201′-9″ at the tower, front slope El. 155 → 130, slope beside the tower, flat roof at El. 130 with a 30° glazed upturn); trusses T29, T31, T32 not yet placed; lobby curtain walls from aerial imagery.',
       'Lobby, tank, South Ramp, bus canopy: framing laid out from S126–S137 with simplified geometry where the scans are unclear (truss fans, skewed lobby lines at 19.83°). Lobby grid: Y 38.17 ft and W 113.17 ft west of A.',
       'Not modelled: lobby foundation sections MF-1–MF-47 (below-grade U-walls, S165–S172), stairs 16, 23, 30 and the covered exit approach (RP-6/7) — locations not fixed on the sheets reviewed.'
     ],
@@ -579,10 +582,63 @@
   [['ET-1', Z['5'] + 0.58 + 2.25 + 6.42, 'TS7×7×½ / TS6×6×½ chords, TS diagonals'], ['ET-2', Z['5'] + 0.58 + 2.25, 'WT12×42 / WT12×34 chords, 2L diagonals'], ['ET-3', Z['5'] + 0.58, 'WT8×33.5 / WT8×25 chords, 2L diagonals']]
     .forEach(([mk, z, txt]) => bar(`LB-${mk}`, 'ET', 2, 'Escalator 9', mk, [['Location', `Escalator 9 truss ${mk}, W to Y (75 ft, 7 panels), El. 136′-8″ to 172′-8″`], ['Section', txt], ['Bearing', '60-durometer elastomeric pads; ET-3 on W10×33 at Y'], ['Source', 'S146, S147']],
       [X.W, yE(136.67), z], [X.Y, yE(172.67), z], { s: 'truss', d: 4, panel: 7, t: 0.5 }));
-  for (let i = 0; i < 9; i++) { const x = X.W + i * 9; bar(`LB-T${11 + i}`, 'LT', 3, 'Lobby roof trusses W–Y', `T${11 + i}`, [['Location', `Lobby roof truss T${11 + i}, ${ft(x - X.W)} east of W, from line 5.1 (El. 155) down to line 7 (El. 130)`], ['Section', 'Steel pipe truss, 6′-0″ deep, 4 in dia. chords (Fy 36)'], ['Source', 'S128, S142–S145; layout simplified']],
-    [x, yE(155), 258], [x, yE(130), Z['7']], { s: 'truss', d: 6, panel: 9, t: 0.4 }); }
-  for (let i = 0; i < 7; i++) { const x = X.Y + 4 + i * 4.8; bar(`LB-T${22 + i}`, 'LT', 2, 'Lobby roof trusses Y–Z', `T${22 + i}`, [['Location', `Lobby roof truss T${22 + i}, between Y and Z, from the tower (El. 155) down to line 7 (El. 130)`], ['Section', 'Steel pipe truss, 6′-0″ deep'], ['Source', 'S128, S142–S145; layout simplified']],
-    [x, yE(155), Z['6'] + 1], [x, yE(130), Z['7']], { s: 'truss', d: 6, panel: 9, t: 0.4 }); }
+  /* ---------- lobby / mezzanine roof (S128 plan, S142–S145 trusses) ----------
+     Lobby grid skewed 19.83° to the garage. Plan positions scaled from S128; truss end elevations from S142 / S143.
+     u = truss direction (skew), v = along the skewed grid lines 5.2, 7 and X–Z1. Point helper: L(z, x, el). */
+  const LR = (z, x, el) => [x, yE(el), z];
+  const th = 19.8304 * DEG, U = [Math.cos(th), -Math.sin(th)], V = [-Math.sin(th), -Math.cos(th)];   // [dz, dx]
+  const APEX = [350.9, -4.5], LW = 24.8, H7 = 76.9;                    // A-7 corner; 5.2 to 7 width; length of line 7 (9 equal spaces)
+  const at = (p, du, dv) => [p[0] + du * U[0] + dv * V[0], p[1] + du * U[1] + dv * V[1]];
+  const SRCR = 'S128, S142–S145; plan scaled from S128';
+  const truss = (id, mk, a, b, d, desc, extra) => bar(id, 'LT', levelOf(a[1]), 'Lobby roof truss', mk, [['Location', desc], ['Section', 'Steel pipe truss (Fy 36 ksi), chords and webs per S142 / S143']].concat(extra || []).concat([['Source', SRCR]]), a, b, { s: 'truss', d, panel: 8, t: 0.4 });
+  const glass = (id, name, p, desc) => quad(id, 'LG', levelOf(p[0][1]), name, 'Sloped glazing', [['Location', desc], ['System', 'Sloped glazing on purlins (TS 5×5) over the trusses; system per architectural drawings'], ['Source', SRCR + '; aerial imagery']], p, 0.12);
+  const deck = (id, name, p, desc) => quad(id, 'LRD', 3, name, '3 in steel deck', [['Location', desc], ['Section', '3 in acoustical steel deck on the trusses (S128 note 1)'], ['Source', SRCR]], p, 0.35);
+
+  // Area 1: slope beside the tower (T22–T27), El. 155 near Y down to El. 130 at Z; diagonal T27/T28 from the A-7 corner to 5.2
+  const xZ = -3.3, xY = -39.5, elX = x => 130 + 25 * (xZ - x) / (xZ - xY);
+  const diagX = z => APEX[1] + (z - APEX[0]) * (36.2 / 39.6);
+  const far = z => Math.max(xY, diagX(z));
+  const zs1 = [290.1, 295, 302.8, 311.2, 318.1, 326.8, APEX[0]];
+  ['T22', 'T22', 'T23', 'T24', 'T25', 'T26'].forEach((mk, i) => { const z = zs1[i + 1]; if (i === 0) return;
+    truss(`LR-${mk}-${i}`, mk, LR(z, far(z), Math.min(155, elX(far(z)))), LR(z, xZ, 130), 4, `Lobby roof truss ${mk}, ${ft(z - Z['6'])} south of line 6, from the high side toward Y (El. ${Math.min(155, elX(far(z))).toFixed(1)}) down to line Z (El. 130)`); });
+  truss('LR-T22-0', 'T22', LR(295, xY, 155), LR(295, xZ, 130), 4, 'Lobby roof truss T22 next to the tower, from Y (El. 155) down to Z (El. 130)');
+  truss('LR-T27', 'T27', LR(311.3, -40.7, 155), LR(APEX[0], APEX[1], 130), 4, 'Lobby roof truss T27 / T28 on the diagonal from line 5.2 (El. 155) to the A-7 corner (El. 130)');
+  for (let i = 0; i < zs1.length - 1; i++) { const za = zs1[i], zb = zs1[i + 1];
+    glass(`LR-G1-${i + 1}`, 'Lobby roof slope by the tower', [LR(za, xZ, 130.4), LR(zb, xZ, 130.4), LR(zb, far(zb), elX(far(zb)) + 0.4), LR(za, far(za), elX(far(za)) + 0.4)], `Glazed slope beside the tower, bay ${i + 1} of ${zs1.length - 1}, between line Z (El. 130) and the high side (El. 155)`); }
+
+  // Area 2: front glazed slope between skewed 5.2 (El. 155) and skewed 7 (El. 130), trusses T4–T10
+  const s2 = [0, 25.6, 34.2, 42.7, 51.3, 59.8, 68.4, H7];
+  const w2 = s => Math.min(LW, LW * s / 47.5);                         // truncated by the diagonal above s = 47.5
+  const el2 = d => 130 + 25 * d / LW;
+  s2.forEach((s, i) => { if (i === 0) return; const q = at(APEX, 0, s), w = w2(s), p = at(q, -w, 0);
+    truss(`LR-T${i + 3}`, `T${i + 3}`, LR(p[0], p[1], el2(w)), LR(q[0], q[1], 130), 6, `Lobby roof truss T${i + 3}, ${ft(s)} along skewed line 7 from the A-7 corner, from line 5.2 (El. ${el2(w).toFixed(1)}) down to line 7 (El. 130)`); });
+  for (let i = 0; i < s2.length - 1; i++) { const qa = at(APEX, 0, s2[i]), qb = at(APEX, 0, s2[i + 1]), pa = at(qa, -w2(s2[i]), 0), pb = at(qb, -w2(s2[i + 1]), 0);
+    glass(`LR-G2-${i + 1}`, 'Lobby front glazed slope', [LR(qa[0], qa[1], 130.4), LR(qb[0], qb[1], 130.4), LR(pb[0], pb[1], el2(w2(s2[i + 1])) + 0.4), LR(pa[0], pa[1], el2(w2(s2[i])) + 0.4)],
+      `Front glazed slope (trusses T4–T10), bay ${i + 1} of ${s2.length - 1}, from line 7 (El. 130) up to line 5.2 (El. 155)`); }
+
+  // Area 3: tall glass triangle against the tower, trusses T11–T20 from 5.2 (El. 155) up to the hip truss T30 on 5.1
+  const z51 = 254.9, z52 = x => 311.3 + (x + 40.7) * 0.3607, x3 = k => -40 - 9.19 * k;
+  const t30 = x => 153.3 + (201.75 - 153.3) * (x - (-122.7)) / ((-38.2) - (-122.7));
+  for (let k = 0; k <= 9; k++) { const x = x3(k), mk = `T${11 + k}`;
+    truss(`LR-${mk}`, mk, LR(z52(x), x, 155), LR(z51, x, t30(x)), k === 9 ? 4 : 6, `Lobby roof truss ${mk}, ${ft(-40 - x)} south-west of Y, from line 5.2 (El. 155) up to the hip on line 5.1 (El. ${t30(x).toFixed(1)})`); }
+  truss('LR-T30', 'T30', LR(z51, -122.7, 153.3), LR(z51, -38.2, 201.75), 6, 'Hip truss T30 along line 5.1, from W (El. 153′-3″) up to the tower at Y (El. 201′-9″)', [['Members', '6 in dia. (X) chords, 6 in (STD) webs except as noted']]);
+  truss('LR-T21', 'T21', LR(z51, -122.7, 155), LR(z52(-122.7), -122.7, 155), 4, 'Lobby roof truss T21 at the W end, line 5.1 to 5.2, El. 155');
+  for (let k = 0; k < 9; k++) { const xa = x3(k), xb = x3(k + 1);
+    glass(`LR-G3-${k + 1}`, 'Lobby glass triangle', [LR(z52(xa), xa, 155.4), LR(z52(xb), xb, 155.4), LR(z51, xb, t30(xb) + 0.4), LR(z51, xa, t30(xa) + 0.4)], `Tall sloped glazing against the tower, bay ${k + 1} of 9 (between T${11 + k} and T${12 + k}), from line 5.2 (El. 155) up to the hip on line 5.1`); }
+
+  // Area 4: flat roof at El. 130 east of skewed line 7 (T1, T2 ×8, T3) with the 30° upturned glazed end of T2
+  const L4 = 100.2, UP = 11.4, elUp = 130 + UP * Math.tan(30 * DEG);
+  for (let k = 0; k <= 9; k++) { const s = H7 * k / 9, q = at(APEX, 0, s), mk = k === 0 ? 'T1' : k === 9 ? 'T3' : 'T2', len = k === 0 ? 84 : k === 9 ? 33.3 : L4, e = at(q, len, 0);
+    truss(`LR-${mk}-${k}`, mk, LR(q[0], q[1], 130), LR(e[0], e[1], 130), 6, `Lobby roof truss ${mk}, ${ft(s)} along skewed line 7 from the A-7 corner, El. 130, ${ft(len)} long${mk === 'T2' ? ' with a 30° upturned end' : ''}`);
+    if (mk === 'T2') { const e2 = at(q, L4 + UP, 0); truss(`LR-T2-${k}-UP`, 'T2', LR(e[0], e[1], 130), LR(e2[0], e2[1], elUp), 6, `Upturned 30° end of truss T2 (${ft(s)} along line 7)`); } }
+  for (let k = 0; k < 9; k++) { const qa = at(APEX, 0, H7 * k / 9), qb = at(APEX, 0, H7 * (k + 1) / 9), ea = at(qa, L4, 0), eb = at(qb, L4, 0), ua = at(qa, L4 + UP, 0), ub = at(qb, L4 + UP, 0);
+    deck(`LR-D4-${k + 1}`, 'Lobby flat roof', [LR(qa[0], qa[1], 130.5), LR(ea[0], ea[1], 130.5), LR(eb[0], eb[1], 130.5), LR(qb[0], qb[1], 130.5)], `Lobby flat roof at El. 130, bay ${k + 1} of 9 between trusses, from skewed line 7 east for ${ft(L4)}`);
+    glass(`LR-G4-${k + 1}`, 'Lobby roof upturned glazing', [LR(ea[0], ea[1], 130.6), LR(eb[0], eb[1], 130.6), LR(ub[0], ub[1], elUp + 0.6), LR(ua[0], ua[1], elUp + 0.6)], `Upturned glazed band at the east end of the flat roof (30°), bay ${k + 1} of 9`); }
+  // enclosure glazing under the flat roof (curtain walls seen in aerial imagery; approximate)
+  const c0 = at(APEX, 0, H7), c1 = at(c0, L4 + UP, 0), c2 = at(APEX, L4 + UP, 0);
+  [[c0, c1, 'south'], [c1, c2, 'east']].forEach(([p, q, k], i) => { for (let j = 0; j < 4; j++) { const a = [p[0] + (q[0] - p[0]) * j / 4, p[1] + (q[1] - p[1]) * j / 4], b = [p[0] + (q[0] - p[0]) * (j + 1) / 4, p[1] + (q[1] - p[1]) * (j + 1) / 4];
+    quad(`LR-CW-${k}-${j + 1}`, 'LG', 1, 'Lobby curtain wall', 'Curtain wall', [['Location', `Lobby ${k} curtain wall under the flat roof, panel ${j + 1} of 4, grade to El. 130`], ['System', 'Glazed curtain wall (architectural); location from aerial imagery, approximate'], ['Source', 'Aerial imagery; S126–S128']],
+      [LR(a[0], a[1], 130), LR(b[0], b[1], 130), LR(b[0], b[1], 117.5), LR(a[0], a[1], 117.5)], 0.12); } });
   [[X.ZL, X.A, 'PB-1'], [X.A, X.A5, 'PB-2'], [X.A5, X.B, 'PB-3']].forEach(([xa, xb, mk]) => bar(`PED-${mk}`, 'PED', 2, 'Pedestrian bridge', mk,
     [['Location', `Pedestrian bridge ${mk}, Level 2, x ${xa.toFixed(1)} to ${xb.toFixed(1)} ft from A, z 272.6–279.7`], ['Section', 'Precast U-trough 8′-2″ wide, two 1′-0″ stems about 2′-11½″ deep, camber 2 in; slide bearing at Z'], ['Source', 'S106, S129, S177']],
     [xa, LEV[2], 276.15], [xb, LEV[2], 276.15], { s: 'rect', w: 8.17, d: 2.96 }));
