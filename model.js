@@ -99,7 +99,7 @@
       'Column sizes from the S148 schedule (re-checked cell by cell). Splice 5 ft above Level 2 (line A: above Level 3). Columns drawn as their 36 in concrete encasement (S151). Handwritten size substitutions on S148 (e.g. W14×287→311) are not applied.',
       'Internal ramps: bay 2.1–2.9 rises from line B (level n) to line J (level n+1), 5.1%; flat landing in J–K, bay 2–3, at every level (S106–S113). Ramp 1 arrives at Level 2 from the South Ramp.',
       'Drum ramps: double helix, about 24 ft rise per turn; ramps start on their grade legs; elevations read from the radial leaders on S115–S125 and interpolated between them.',
-      'Skylight bearing El. 184.67 (S158 stair 6th level 184′-8″, S178 El. 184′-10″); not stated on S138.',
+      'Skylight: eaves on the W18 beams at El. 184.67 (S158 / S178; not stated on S138); gable profile from aerial imagery, ridge assumed 9 ft above the eaves.',
       'Lobby, tank, South Ramp, bus canopy: framing laid out from S126–S137 with simplified geometry where the scans are unclear (truss fans, skewed lobby lines at 19.83°). Lobby grid: Y 38.17 ft and W 113.17 ft west of A.',
       'Not modelled: lobby foundation sections MF-1–MF-47 (below-grade U-walls, S165–S172), stairs 16, 23, 30 and the covered exit approach (RP-6/7) — locations not fixed on the sheets reviewed.'
     ],
@@ -494,14 +494,26 @@
   ['B', 'C', 'D', 'E', 'F', 'G', 'H'].forEach((g, i, arr) => { BBX.push(['BB3', X[g]]); const nx = X[arr[i + 1] || 'J']; if (nx - X[g] > 20) BBX.push(['BB3', (X[g] + nx) / 2]); });
   BBX.push(['BB4', X.J]);
   const BBS = { BB1: '12 × 15 in, tf ¾, tw ½', BB2: '12 × 15 in, tf ½, tw ⁵⁄₁₆, camber ½ in', BB3: '12 × 15 in, tf ⅜, tw ¼, camber ½ in', BB4: '15 × 15 in, tf ⅜, tw ⅜' };
-  BBX.forEach(([mk, x], i) => bar(`SK-${mk}-${P2(i + 1)}`, 'SKX', 5, `Skylight box beam ${i + 1}`, mk, [['Location', `Skylight box beam ${i + 1} of ${BBX.length}, ${ft(x)} east of A, line 5 to 6, with glazing gutters`], ['Section', `${mk}: steel box ${BBS[mk]}`], ['Source', 'S138']],
-    [x, SKY_Y, Z['5']], [x, SKY_Y, Z['6']], { s: 'rect', w: mk === 'BB4' ? 1.25 : 1.0, d: 1.25 }));
+  /* Gable roof (seen in aerial imagery): the box beams are rafters rising from the W18 beams on lines 5 and 6 to a ridge on the
+     centre of the light well; glazing slopes both ways between them, ridge running A to J, glazed gable end at J.
+     Ridge height is not on S138: assumed 9 ft above the eaves (about 27°). */
+  const SKY_RISE = 9, ZR = (Z['5'] + Z['6']) / 2, yE5 = SKY_Y + 1.25, yR = yE5 + SKY_RISE;
+  BBX.forEach(([mk, x], i) => [['5', Z['5'], 'S', 'south (line 5)'], ['6', Z['6'], 'N', 'north (line 6)']].forEach(([ln, z, k, side]) =>
+    bar(`SK-${mk}-${P2(i + 1)}${k}`, 'SKX', 5, `Skylight rafter ${i + 1}`, mk, [['Location', `Skylight box-beam rafter ${i + 1} of ${BBX.length}, ${ft(x)} east of A, ${side} slope, eave to ridge, with glazing gutter`],
+      ['Section', `${mk}: steel box ${BBS[mk]}`], ['Geometry', `Gable rafter, rise ${SKY_RISE} ft over ${ft(18)} (assumed; ridge height not on S138)`], ['Source', 'S138; gable profile from aerial imagery']],
+      [x, yE5, z], [x, yR, ZR], { s: 'rect', w: mk === 'BB4' ? 1.25 : 1.0, d: 1.25 })));
+  bar('SK-RIDGE', 'SKB', 5, 'Skylight ridge', 'Ridge', [['Location', 'Skylight ridge along the centre of the light well, A to J'], ['Section', 'Ridge member / cap per skylight manufacturer (not detailed on S138)'], ['Source', 'S138; aerial imagery']],
+    [X.A, yR + 0.3, ZR], [X.J, yR + 0.3, ZR], { s: 'rect', w: 0.7, d: 0.5 });
   const gx = [X.A].concat(BBX.map(q => q[1]));
   for (let i = 0; i < gx.length - 1; i++) {
-    const xa = gx[i] + 0.5, xb = gx[i + 1] - 0.5, xm = (xa + xb) / 2, y0 = SKY_Y + 1.25, y1 = y0 + 2.5;
-    quad(`SK-GL-${P2(i + 1)}`, 'GL', 5, `Skylight glazing bay ${i + 1}`, 'Glazing', [['Location', `Skylight glazing bay ${i + 1}, west slope`], ['Source', 'S138; profile per architectural drawings']], [[xa, y0, Z['5']], [xm, y1, Z['5']], [xm, y1, Z['6']], [xa, y0, Z['6']]], 0.1);
-    quad(`SK-GL-${P2(i + 1)}B`, 'GL', 5, `Skylight glazing bay ${i + 1}`, 'Glazing', [['Location', `Skylight glazing bay ${i + 1}, east slope`], ['Source', 'S138']], [[xm, y1, Z['5']], [xb, y0, Z['5']], [xb, y0, Z['6']], [xm, y1, Z['6']]], 0.1);
+    const xa = gx[i] + 0.4, xb = gx[i + 1] - 0.4;
+    quad(`SK-GL-${P2(i + 1)}`, 'GL', 5, `Skylight glazing bay ${i + 1}`, 'Glazing', [['Location', `Skylight glazing bay ${i + 1} (${ft(xa)} to ${ft(xb)} east of A), south slope, line 5 to ridge`], ['Source', 'S138; system per skylight manufacturer']],
+      [[xa, yE5 + 0.1, Z['5']], [xb, yE5 + 0.1, Z['5']], [xb, yR + 0.1, ZR], [xa, yR + 0.1, ZR]], 0.1);
+    quad(`SK-GL-${P2(i + 1)}B`, 'GL', 5, `Skylight glazing bay ${i + 1}`, 'Glazing', [['Location', `Skylight glazing bay ${i + 1} (${ft(xa)} to ${ft(xb)} east of A), north slope, ridge to line 6`], ['Source', 'S138']],
+      [[xa, yR + 0.1, ZR], [xb, yR + 0.1, ZR], [xb, yE5 + 0.1, Z['6']], [xa, yE5 + 0.1, Z['6']]], 0.1);
   }
+  quad('SK-GL-END-J', 'GL', 5, 'Skylight gable end at J', 'Glazing', [['Location', 'Glazed gable end of the skylight at line J'], ['Source', 'Aerial imagery; framing per skylight manufacturer']],
+    [[X.J + 0.6, yE5, Z['5']], [X.J + 0.6, yR, ZR - 0.01], [X.J + 0.6, yR, ZR + 0.01], [X.J + 0.6, yE5, Z['6']]], 0.1);
 
   /* ============ STAIRS (S106–S113 openings, S129, S157–S159) ============ */
   function stair(code, name, x0, x1, z0, z1, els, src, opts) {
