@@ -41,3 +41,11 @@ One member at a time, built for many years of inspection data:
 - **Defects** (cards), **Defect register** (one row per defect: first and last seen, condition-state trend CS2 → CS3 → CS4, latest size, status, photos) and **Defects by inspection** (each defect's condition state at each inspection date, ▲ when grown).
 - **Inspection history** grouped by year (latest three years open, older years folded), with the change in NBI from the previous inspection.
 - **Photos** grouped by year, tagged with their defect number.
+
+## Inspection visits (2026-11-26)
+For the monthly programme: one record per site visit, not per member.
+- **Start visit** (header): date, inspector(s), levels and areas covered, notes. While it is open the header shows it, and every inspection, defect observation and photo entered is stamped with it and defaults to its date and inspectors.
+- **End visit**: confirm the coverage and add closing notes. Every member in the covered levels and areas counts as looked at on that date, with no change unless something was recorded.
+- Element view: **Last looked at**, **Last change** and the number of visits; the condition timeline marks each visit as a tick. Table: **Last looked at** and **Last change** columns and a "Not looked at in 45+ days" filter.
+- Sidebar: recent visits; **Visit log** exports every visit (coverage, members covered, records and photos made) to CSV.
+- Stored in IndexedDB (store "visits", database version 3); a visit syncs to `garage-assets/alewife/visits/<id>.json` once it is ended.

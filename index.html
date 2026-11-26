@@ -161,6 +161,7 @@ table.grid td.n{text-align:right}
 .evsec>h3{font-family:var(--f-head);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .evchart{width:100%;height:auto;display:block;max-height:240px}
 .evlegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}.evlegend span{display:inline-flex;align-items:center;gap:6px}
+.vtick{width:2px;height:10px;background:var(--muted)}
 .lline{width:18px;height:3px;background:var(--accent);border-radius:2px}
 .evscroll{max-height:none;border:1px solid var(--line);border-radius:6px}
 .evscroll table.grid td.wrap{white-space:normal;min-width:180px;max-width:420px}
@@ -220,6 +221,17 @@ legend{font-size:12px;color:var(--muted);padding:0 4px}
 #lightbox img{max-height:78vh;object-fit:contain;border-radius:4px}
 #lightbox figcaption{color:#e8edf2;font-size:13px}
 #lightbox .btn{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px))}
+#visitBox{position:fixed;inset:0;background:rgba(8,12,16,.55);display:grid;place-items:center;z-index:60;padding:16px;overflow:auto}
+#visitBox .card{background:var(--surface);border:1px solid var(--line);border-radius:8px;width:min(620px,100%);max-height:calc(100vh - 32px);overflow:auto}
+.vform{border:0;background:none}
+.vchecks{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:4px 12px}
+.vchecks label{flex-direction:row!important;align-items:center;gap:6px!important;color:var(--fg)!important;font-size:13px!important}
+.vchip{gap:8px;padding:3px 4px 3px 10px;color:var(--fg);border-color:var(--accent);background:var(--accent-soft)}
+.vchip .dot{background:var(--good);animation:vpulse 2s infinite}
+.vchip .btn{padding:3px 10px}
+@keyframes vpulse{50%{opacity:.35}}
+.vlist{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:5px;font-size:12.5px}
+.vlist li{display:grid;grid-template-columns:auto 1fr;gap:8px}.vlist .vd{font-variant-numeric:tabular-nums;font-weight:500}.vlist .vt{color:var(--muted)}
 #csvbox{position:fixed;inset:0;background:rgba(8,12,16,.6);display:grid;place-items:center;z-index:50;padding:24px}
 #csvbox .card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;width:min(720px,100%);display:flex;flex-direction:column;gap:10px}
 #csvbox textarea{width:100%;height:50vh;font-family:var(--f-mono);font-size:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:5px;padding:8px}
@@ -246,6 +258,8 @@ legend{font-size:12px;color:var(--muted);padding:0 4px}
   <header class="bar">
     <div class="brand"><h1 id="mName">Garage Asset Model</h1><span class="sub" id="mSub"></span></div>
     <span class="chip warn" title="Geometry built from the scanned 1980 drawings; several dimensions and locations are approximate (see About this model)">Model from drawings · verify</span>
+    <button class="btn primary" type="button" id="visitStart">Start visit</button>
+    <span class="chip vchip" id="visitChip" hidden><span class="dot"></span><span id="visitTxt"></span><button class="btn" type="button" id="visitEnd">End visit</button></span>
     <div class="spacer"></div>
     <span class="chip" id="sync"><span class="dot"></span><span id="syncText">Connecting…</span></span>
   </header>
@@ -283,6 +297,12 @@ legend{font-size:12px;color:var(--muted);padding:0 4px}
     <section>
       <h2>Needs attention (NBI ≤ 4)</h2>
       <ul class="attn" id="attn"></ul>
+    </section>
+    <section>
+      <h2>Inspection visits</h2>
+      <p class="note" style="margin-top:0" id="visitCount"></p>
+      <ul class="vlist" id="visitList"></ul>
+      <div class="row" style="margin-top:8px"><button class="btn" type="button" id="expVisit">Visit log</button></div>
     </section>
     <section>
       <h2>Records &amp; photos</h2>
@@ -330,6 +350,7 @@ legend{font-size:12px;color:var(--muted);padding:0 4px}
           <option value="">Any condition</option><option value="good">Good (7–9)</option><option value="fair">Fair (5–6)</option>
           <option value="poor">Poor (4)</option><option value="serious">Serious or worse (0–3)</option><option value="none">Not inspected</option>
           <option value="attn">Needs attention (≤ 4)</option>
+          <option value="stale">Not looked at in 45+ days</option>
         </select>
         <span class="tv-count" id="tvCount"></span>
       </div>
@@ -382,6 +403,7 @@ legend{font-size:12px;color:var(--muted);padding:0 4px}
   <button class="btn" type="button" id="lbClose">Close</button>
   <figure><img id="lbImg" alt=""><figcaption id="lbCap"></figcaption></figure>
 </div>
+<div id="visitBox" hidden><div class="card" id="visitCard"></div></div>
 <div id="csvbox" hidden>
   <div class="card">
     <strong id="csvTitle">CSV</strong>
@@ -450,8 +472,8 @@ const blobUrls=new Map();
 let idb=null;
 function idbOpen(){return new Promise((res,rej)=>{
   if(!window.indexedDB)return rej(new Error("no indexedDB"));
-  const r=indexedDB.open("garageAsset."+PROJECT+".v1",2);   // v2 adds the "defects" store; existing stores and records are kept
-  r.onupgradeneeded=()=>{const d=r.result;["inspections","photos","blobs","defects"].forEach(n=>{if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:"id"});});};
+  const r=indexedDB.open("garageAsset."+PROJECT+".v1",3);   // v2 adds "defects", v3 adds "visits"; existing stores and records are kept
+  r.onupgradeneeded=()=>{const d=r.result;["inspections","photos","blobs","defects","visits"].forEach(n=>{if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:"id"});});};
   r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
 function idbAll(store){return new Promise((res)=>{if(!idb)return res([]);const q=idb.transaction(store).objectStore(store).getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>res([]);});}
 function idbGet(store,id){return new Promise((res)=>{if(!idb)return res(null);const q=idb.transaction(store).objectStore(store).get(id);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null);});}
@@ -465,12 +487,12 @@ function recompute(){
     const p=latest.get(i.componentId);
     if(!p||String(i.date)>String(p.date)||(i.date===p.date&&String(i.createdAt||"")>String(p.createdAt||"")))latest.set(i.componentId,i);
   }
-  recomputeDefects();refreshAll();if(selected)mvPins();
+  recomputeDefects();recomputeVisits();renderVisitBar();refreshAll();if(selected)mvPins();
 }
 function setSync(state,text){const s=$("sync");s.className="chip "+(state||"");$("syncText").textContent=text;}
-async function loadLocal(){inspections=await idbAll("inspections");photos=await idbAll("photos");defects=await idbAll("defects");recompute();}
-async function saveInspection(doc){doc.id=newId("insp");doc.synced=false;await idbPut("inspections",doc);inspections.push(doc);recompute();scheduleSync();return doc.id;}
-async function savePhoto(meta,blob){meta.id=newId("photo");meta.synced=false;meta.hasBlob=true;await idbPut("blobs",{id:meta.id,blob});await idbPut("photos",meta);photos.push(meta);return meta.id;}
+async function loadLocal(){inspections=await idbAll("inspections");photos=await idbAll("photos");defects=await idbAll("defects");visits=await idbAll("visits");recompute();}
+async function saveInspection(doc){const av=activeVisit();if(av)doc.visitId=av.id;doc.id=newId("insp");doc.synced=false;await idbPut("inspections",doc);inspections.push(doc);recompute();scheduleSync();return doc.id;}
+async function savePhoto(meta,blob){const av=activeVisit();if(av)meta.visitId=av.id;meta.id=newId("photo");meta.synced=false;meta.hasBlob=true;await idbPut("blobs",{id:meta.id,blob});await idbPut("photos",meta);photos.push(meta);return meta.id;}
 
 /* --- GitHub --- */
 const GH=window.SharedGitHubSync||null;
@@ -493,7 +515,7 @@ function cleanInspection(j,id){
   if(!j||typeof j!=="object"||!byId.has(j.componentId))return null;
   const r=Number(j.rating);if(!Number.isInteger(r)||r<0||r>9)return null;
   return {id,componentId:j.componentId,level:byId.get(j.componentId).level,type:byId.get(j.componentId).type,date:cleanStr(j.date,10),inspector:cleanStr(j.inspector,80),rating:r,
-    defects:Array.isArray(j.defects)?j.defects.slice(0,30).map(d=>cleanStr(d,80)):[],notes:cleanStr(j.notes,2000),action:cleanStr(j.action,80),createdAt:cleanStr(j.createdAt,30),device:cleanStr(j.device,40),synced:true};
+    defects:Array.isArray(j.defects)?j.defects.slice(0,30).map(d=>cleanStr(d,80)):[],notes:cleanStr(j.notes,2000),action:cleanStr(j.action,80),createdAt:cleanStr(j.createdAt,30),device:cleanStr(j.device,40),visitId:cleanStr(j.visitId,80)||null,synced:true};
 }
 const fileOf=o=>{const c=Object.assign({},o);delete c.synced;delete c.hasBlob;delete c.example;return JSON.stringify(c,null,2)+"\n";};
 let syncing=false, syncTimer=null, lastSync=null;
@@ -508,6 +530,10 @@ async function syncNow(){
     for(const i of inspections.filter(x=>!x.synced&&!x.example)){
       const r=await c.put(`${ROOT}/inspections/${i.id}.json`,fileOf(Object.assign({},i,{device:s.device||""})),null,`Garage inspection ${i.componentId} ${i.date}`);
       if(r.ok||r.kind==="conflict"){i.synced=true;await idbPut("inspections",i);up++;}else{err=r.message;break;}
+    }
+    if(!err)for(const v of visits.filter(x=>x.endedAt&&!x.synced)){
+      const r=await c.put(`${ROOT}/visits/${v.id}.json`,fileOf(Object.assign({},v,{device:s.device||""})),null,`Garage inspection visit ${v.date}`);
+      if(r.ok||r.kind==="conflict"){v.synced=true;await idbPut("visits",v);up++;}else{err=r.message;break;}
     }
     if(!err)for(const d of defects.filter(x=>!x.synced)){
       const r=await c.put(`${ROOT}/defects/${d.id}.json`,fileOf(Object.assign({},d,{device:s.device||""})),null,`Garage defect ${d.componentId} ${d.date}`);
@@ -525,15 +551,17 @@ async function syncNow(){
       const t=await c.tree(ROOT);
       if(!t.ok)err=t.message;
       else{
-        const haveI=new Set(inspections.map(i=>i.id)),haveP=new Set(photos.map(p=>p.id)),haveD=new Set(defects.map(d=>d.id));
+        const haveI=new Set(inspections.map(i=>i.id)),haveP=new Set(photos.map(p=>p.id)),haveD=new Set(defects.map(d=>d.id)),haveV=new Set(visits.map(v=>v.id));
         for(const [path] of t.files){
           let m=path.match(/\/inspections\/([A-Za-z0-9-]{1,80})\.json$/);
           if(m&&!haveI.has(m[1])){const r=await c.raw(path);if(r.ok){let j=null;try{j=JSON.parse(r.text);}catch(e){}const v=cleanInspection(j,m[1]);if(v){await idbPut("inspections",v);inspections.push(v);down++;}}continue;}
+          m=path.match(/\/visits\/([A-Za-z0-9-]{1,80})\.json$/);
+          if(m&&!haveV.has(m[1])){const r=await c.raw(path);if(r.ok){let j=null;try{j=JSON.parse(r.text);}catch(e){}const v=cleanVisit(j,m[1]);if(v){await idbPut("visits",v);visits.push(v);down++;}}continue;}
           m=path.match(/\/defects\/([A-Za-z0-9-]{1,80})\.json$/);
           if(m&&!haveD.has(m[1])){const r=await c.raw(path);if(r.ok){let j=null;try{j=JSON.parse(r.text);}catch(e){}const v=cleanDefect(j,m[1]);if(v){await idbPut("defects",v);defects.push(v);down++;}}continue;}
           m=path.match(/\/photos\/([A-Z0-9.-]{1,60})\/([A-Za-z0-9-]{1,80})\.json$/);
           if(m&&!haveP.has(m[2])&&byId.has(m[1])&&t.files.has(path.replace(/\.json$/,".jpg"))){const r=await c.raw(path);if(r.ok){let j={};try{j=JSON.parse(r.text)||{};}catch(e){}
-            const v={id:m[2],componentId:m[1],inspectionId:cleanStr(j.inspectionId,80)||null,defectId:cleanStr(j.defectId,80)||null,caption:cleanStr(j.caption,200),date:cleanStr(j.date,10),createdAt:cleanStr(j.createdAt,30),synced:true,hasBlob:false};
+            const v={id:m[2],componentId:m[1],inspectionId:cleanStr(j.inspectionId,80)||null,defectId:cleanStr(j.defectId,80)||null,visitId:cleanStr(j.visitId,80)||null,caption:cleanStr(j.caption,200),date:cleanStr(j.date,10),createdAt:cleanStr(j.createdAt,30),synced:true,hasBlob:false};
             await idbPut("photos",v);photos.push(v);down++;}}
         }
       }
@@ -546,7 +574,7 @@ async function syncNow(){
 function showSyncState(up,down){
   if(!idb){setSync("warn","Browser storage unavailable · records are lost when the page closes");return;}
   if(!ghOn()){setSync("warn","Saved in this browser only · GitHub sync off");return;}
-  const s=ghSettings(),pend=inspections.filter(i=>!i.synced&&!i.example).length+defects.filter(d=>!d.synced).length+photos.filter(p=>!p.synced&&!p.example).length;
+  const s=ghSettings(),pend=inspections.filter(i=>!i.synced&&!i.example).length+defects.filter(d=>!d.synced).length+visits.filter(v=>v.endedAt&&!v.synced).length+photos.filter(p=>!p.synced&&!p.example).length;
   setSync(pend?"warn":"ok",`GitHub ${s.owner}/${s.repo}`+(pend?` · ${pend} waiting to upload`:` · synced ${lastSync?lastSync.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}):""}`)+(up||down?` (${up} sent, ${down} received)`:""));
 }
 async function photoBlobUrl(p){
@@ -881,7 +909,9 @@ const TV_COLS=[
   {k:"ni",t:"Inspections",cls:"n",v:c=>inspCount.get(c.id)||0},
   {k:"nd",t:"Open defects",cls:"n",v:c=>{const s=defSummary.get(c.id);return s?s.open:0;}},
   {k:"wcs",t:"Worst CS",v:c=>{const s=defSummary.get(c.id);return s?s.worst:null;},cell:c=>{const s=defSummary.get(c.id);return s?csChip(s.worst):el("span",{class:"note",text:"–"});}},
-  {k:"np",t:"Photos",cls:"n",v:c=>photoCount.get(c.id)||0}];
+  {k:"np",t:"Photos",cls:"n",v:c=>photoCount.get(c.id)||0},
+  {k:"seen",t:"Last looked at",v:c=>{const v=lastVisitCache.get(c.id);return v?v.date:"";}},
+  {k:"chg",t:"Last change",v:c=>lastChange(c)||""}];
 let tvSort={k:"id",dir:1};
 const inspCount=new Map(),photoCount=new Map();
 function renderTable(){
@@ -897,7 +927,8 @@ function renderTable(){
   const q=$("tvSearch").value.trim().toLowerCase(),cf=$("tvCond").value;
   let rows=scopeComps().filter(c=>{
     const l=latest.get(c.id),k=cat(l?l.rating:null);
-    if(cf==="attn"?!(l&&l.rating<=4):cf&&k!==cf)return false;
+    if(cf==="stale"){const v=lastVisitCache.get(c.id);if(v&&daysSince(v.date)<45)return false;}
+    else if(cf==="attn"?!(l&&l.rating<=4):cf&&k!==cf)return false;
     if(!q)return true;
     return TV_COLS.some(col=>String(col.v(c)??"").toLowerCase().includes(q))||(l&&String(l.notes||"").toLowerCase().includes(q));
   });
@@ -963,7 +994,7 @@ function closePanel(){
   try{history.replaceState(null,"",location.pathname+location.search);}catch(e){}
 }
 $("pClose").onclick=closePanel;
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(!$("lightbox").hidden)$("lightbox").hidden=true;else if(mv.placing){mvSetPlacing(false);}else if(!$("csvbox").hidden)$("csvbox").hidden=true;else closePanel();}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(!$("visitBox").hidden)$("visitBox").hidden=true;else if(!$("lightbox").hidden)$("lightbox").hidden=true;else if(mv.placing){mvSetPlacing(false);}else if(!$("csvbox").hidden)$("csvbox").hidden=true;else closePanel();}});
 
 function compInspections(id){return inspections.filter(i=>i.componentId===id&&typeof i.rating==="number").sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.createdAt||"").localeCompare(String(a.createdAt||"")));}
 function compPhotos(id){return photos.filter(p=>p.componentId===id).sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")));}
@@ -1042,7 +1073,7 @@ function renderPanel(){
 }
 
 function inspForm(c,last){
-  const today=new Date();const iso=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);
+  const iso=recDate();
   const sel=el("select",{id:"fRating",required:""});
   sel.append(el("option",{value:"",text:"Choose a rating"}));
   for(let r=9;r>=0;r--)sel.append(el("option",{value:String(r),text:`${r} · ${NBI[r][0]} — ${NBI[r][1]}`}));
@@ -1057,7 +1088,7 @@ function inspForm(c,last){
   const f=el("form",{class:"insp"},
     el("strong",{text:"New inspection"}),
     el("div",{class:"two"},el("label",null,"Date",el("input",{type:"date",id:"fDate",value:iso,required:""})),
-      el("label",null,"Inspector",el("input",{type:"text",id:"fInsp",required:"",placeholder:"Name",maxlength:"80",value:lastInspector||""}))),
+      el("label",null,"Inspector",el("input",{type:"text",id:"fInsp",required:"",placeholder:"Name",maxlength:"80",value:recInspector()}))),
     el("label",null,"NBI condition rating",sel),fs,
     el("label",null,"Notes",el("textarea",{id:"fNotes",maxlength:"2000",placeholder:"Location on member, size of cracks or spalls, quantities"})),
     el("label",null,"Recommended action",act),
@@ -1138,7 +1169,7 @@ function recomputeDefects(){
   const ids=new Set(defects.map(d=>d.componentId));
   ids.forEach(cid=>{const ch=defectChains(cid).filter(c=>isOpen(c.cur));if(ch.length)defSummary.set(cid,{open:ch.length,worst:Math.max(...ch.map(c=>c.cur.cs))});});
 }
-async function saveDefect(doc){doc.id=newId("def");if(!doc.rootId)doc.rootId=doc.id;doc.synced=false;await idbPut("defects",doc);defects.push(doc);recompute();scheduleSync();return doc.id;}
+async function saveDefect(doc){const av=activeVisit();if(av)doc.visitId=av.id;doc.id=newId("def");if(!doc.rootId)doc.rootId=doc.id;doc.synced=false;await idbPut("defects",doc);defects.push(doc);recompute();scheduleSync();return doc.id;}
 function cleanDefect(j,id){
   if(!j||typeof j!=="object"||!byId.has(j.componentId))return null;
   const cs=Number(j.cs);if(!Number.isInteger(cs)||cs<1||cs>4)return null;
@@ -1147,7 +1178,7 @@ function cleanDefect(j,id){
   return {id,rootId:cleanStr(j.rootId,80)||id,prevId:cleanStr(j.prevId,80)||null,componentId:j.componentId,date:cleanStr(j.date,10),inspector:cleanStr(j.inspector,80),
     type:cleanStr(j.type,80),cs,status:["New"].concat(DSTAT).includes(j.status)?j.status:"New",len:num(j.len),wid:num(j.wid),dep:num(j.dep),crack:num(j.crack),
     location:{lx:num(L.lx)||0,ly:num(L.ly)||0,lz:num(L.lz)||0,nx:num(L.nx)||0,ny:num(L.ny)||0,nz:num(L.nz)||0,desc:cleanStr(L.desc,240),face:cleanStr(L.face,40),along:num(L.along)},
-    notes:cleanStr(j.notes,2000),createdAt:cleanStr(j.createdAt,30),device:cleanStr(j.device,40),synced:true};
+    notes:cleanStr(j.notes,2000),createdAt:cleanStr(j.createdAt,30),device:cleanStr(j.device,40),visitId:cleanStr(j.visitId,80)||null,synced:true};
 }
 
 /* --- member window 3D --- */
@@ -1320,7 +1351,7 @@ function defectSection(c){
 function openDefectForm(c,chain){
   formOpen=true;
   const prev=chain?chain.cur:null;
-  const today=new Date(),iso=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);
+  const iso=recDate();
   const typeSel=el("select",{id:"dType",required:""});typeSel.append(el("option",{value:"",text:"Choose a defect"}));
   defectsFor(c).concat(["Other"]).forEach(t=>typeSel.append(el("option",{value:t,text:t})));
   const csSel=el("select",{id:"dCS",required:""});csSel.append(el("option",{value:"",text:"Choose a condition state"}));
@@ -1336,7 +1367,7 @@ function openDefectForm(c,chain){
   files.onchange=showPicked;cam.onchange=showPicked;
   const msg=el("p",{class:"note"}),save=el("button",{class:"btn primary",type:"submit",text:chain?"Save re-inspection":"Save defect"}),cancel=el("button",{class:"btn",type:"button",text:"Cancel"});
   const f=el("form",{class:"insp"},el("strong",{text:chain?`Re-inspect defect ${chain.num}: ${prev.type}`:"New defect"}),
-    el("div",{class:"two"},el("label",null,"Date",el("input",{type:"date",id:"dDate",value:iso,required:""})),el("label",null,"Inspector",el("input",{type:"text",id:"dInsp",required:"",maxlength:"80",value:lastInspector||""}))),
+    el("div",{class:"two"},el("label",null,"Date",el("input",{type:"date",id:"dDate",value:iso,required:""})),el("label",null,"Inspector",el("input",{type:"text",id:"dInsp",required:"",maxlength:"80",value:recInspector()}))),
     chain?el("label",null,"Status since last inspection",stSel):el("label",null,"Defect",typeSel),
     el("label",null,"Condition state (AASHTO)",csSel),
     el("div",{class:"two"},num("dLen","Length (in)",prev&&prev.len),num("dWid","Width (in)",prev&&prev.wid)),
@@ -1432,8 +1463,10 @@ function evStep(d){const i=evList.findIndex(c=>c.id===evId);const n=evList[i<0?0
 function chainAt(ch,date){let s=null;ch.obs.forEach(o=>{if(String(o.date)<=date)s=o;});return s;}
 function evTimeline(c){
   const insp=compInspections(c.id).slice().reverse(),chs=defectChains(c.id);
-  const dates=[...new Set(insp.map(i=>i.date).concat(defects.filter(d=>d.componentId===c.id).map(d=>d.date)))].filter(Boolean).sort();
-  if(!dates.length)return el("p",{class:"empty",text:"No inspections or defects recorded yet. The timeline fills in as inspections are added."});
+  const changes=[...new Set(insp.map(i=>i.date).concat(defects.filter(d=>d.componentId===c.id).map(d=>d.date)))].filter(Boolean).sort();
+  const vdates=visitsFor(c).map(v=>v.date);
+  const dates=[...new Set(changes.concat(vdates))].sort();
+  if(!dates.length)return el("p",{class:"empty",text:"No visits, inspections or defects recorded yet. The timeline fills in as visits and inspections are added."});
   const NS="http://www.w3.org/2000/svg",W=720,H=200,L=44,R=16,T=14,B=40,ph=H-T-B;
   const svg=document.createElementNS(NS,"svg");svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.setAttribute("class","evchart");svg.setAttribute("role","img");
   const t0=new Date(dates[0]).getTime(),t1=new Date(dates[dates.length-1]).getTime(),span=Math.max(t1-t0,1);
@@ -1443,9 +1476,11 @@ function evTimeline(c){
   [9,7,5,3,0].forEach(r=>{mk("line",{x1:L,x2:W-R,y1:yN(r),y2:yN(r),stroke:"var(--line)"});mk("text",{x:L-8,y:yN(r)+4,"text-anchor":"end","font-size":11,fill:"var(--muted)"},r);});
   mk("text",{x:4,y:T+4,"font-size":10,fill:"var(--muted)"},"NBI");
   // open defects by CS at each date: stacked bars (right axis scale)
-  const counts=dates.map(d=>{const k={1:0,2:0,3:0,4:0};chs.forEach(ch=>{const s=chainAt(ch,d);if(s&&isOpen(s))k[s.cs]++;});return k;});
-  const maxC=Math.max(1,...counts.map(k=>k[1]+k[2]+k[3]+k[4])),bw=Math.min(22,(W-L-R)/Math.max(dates.length,1)*0.5);
-  dates.forEach((d,i)=>{let y=T+ph;[1,2,3,4].forEach(cs=>{const n=counts[i][cs];if(!n)return;const h=n/maxC*ph*0.55;y-=h;
+  // visit ticks along the bottom: every visit that covered this member
+  vdates.forEach(d=>{const t=mk("line",{x1:xs(d),x2:xs(d),y1:T+ph+3,y2:T+ph+11,stroke:"var(--muted)","stroke-width":1.5});t.append(Object.assign(document.createElementNS(NS,"title"),{textContent:`Visit ${d}`}));});
+  const counts=changes.map(d=>{const k={1:0,2:0,3:0,4:0};chs.forEach(ch=>{const s=chainAt(ch,d);if(s&&isOpen(s))k[s.cs]++;});return k;});
+  const maxC=Math.max(1,...counts.map(k=>k[1]+k[2]+k[3]+k[4])),bw=Math.min(18,Math.max(5,(W-L-R)/Math.max(changes.length,1)*0.5));
+  changes.forEach((d,i)=>{let y=T+ph;[1,2,3,4].forEach(cs=>{const n=counts[i][cs];if(!n)return;const h=n/maxC*ph*0.55;y-=h;
     mk("rect",{x:xs(d)-bw/2,y,width:bw,height:h,fill:`var(--${CS_CAT[cs]})`,opacity:0.5}).append(Object.assign(document.createElementNS(NS,"title"),{textContent:`${d}: ${n} open CS${cs}`}));});
     const tot=counts[i][1]+counts[i][2]+counts[i][3]+counts[i][4];if(tot)mk("text",{x:xs(d),y:y-3,"text-anchor":"middle","font-size":10,fill:"var(--muted)"},tot);});
   // NBI step line
@@ -1457,7 +1492,7 @@ function evTimeline(c){
   const yrs=[...new Set(dates.map(d=>d.slice(0,4)))];
   if(yrs.length>1){for(let y=+yrs[0];y<=+yrs[yrs.length-1];y++){const x=xs(`${y}-01-01`);if(x>=L-1&&x<=W-R+1){mk("line",{x1:x,x2:x,y1:T,y2:T+ph,stroke:"var(--line)","stroke-dasharray":"2 3"});}mk("text",{x:Math.min(Math.max(xs(`${y}-07-01`),L+12),W-R-12),y:H-B+18,"text-anchor":"middle","font-size":11,fill:"var(--muted)"},y);}}
   else dates.forEach(d=>mk("text",{x:xs(d),y:H-B+18,"text-anchor":"middle","font-size":11,fill:"var(--muted)"},fmtDate(d)));
-  const lg=el("div",{class:"evlegend"},el("span",null,el("span",{class:"lline"}),"NBI rating"),...[1,2,3,4].map(k=>el("span",null,el("span",{class:"swatch",style:`background:var(--${CS_CAT[k]});opacity:.6`}),`Open CS${k}`)));
+  const lg=el("div",{class:"evlegend"},el("span",null,el("span",{class:"lline"}),"NBI rating"),el("span",null,el("span",{class:"vtick"}),"Visit"),...[1,2,3,4].map(k=>el("span",null,el("span",{class:"swatch",style:`background:var(--${CS_CAT[k]});opacity:.6`}),`Open CS${k}`)));
   return el("div",null,svg,lg);
 }
 function evSummary(c){
@@ -1475,6 +1510,9 @@ function evSummary(c){
       el("div",{class:"when",text:l?`Last inspected ${fmtDate(l.date)}${l.inspector?" by "+l.inspector:""}`:"No inspection recorded"}),el("div",{class:"when",text:l&&l.action&&l.action!=="None"?"Action: "+l.action:""})),
     el("dl",{class:"evstats"},
       el("dt",{text:"Open defects"}),el("dd",null,open.length?el("span",null,String(open.length)+" ",csChip(worst)):"None"),
+      el("dt",{text:"Last looked at"}),el("dd",{text:(()=>{const v=lastVisitCache.get(c.id);return v?`${fmtDate(v.date)} (${daysSince(v.date)} days ago)`:"No visit recorded";})()}),
+      el("dt",{text:"Last change"}),el("dd",{text:lastChange(c)?fmtDate(lastChange(c)):"None recorded"}),
+      el("dt",{text:"Visits"}),el("dd",{text:(()=>{const vs=visitsFor(c);return vs.length?`${vs.length} since ${vs[vs.length-1].date.slice(0,4)}`:"0";})()}),
       el("dt",{text:"Inspections"}),el("dd",{text:insp.length?`${insp.length} since ${first.slice(0,4)}`:"0"}),
       el("dt",{text:"Defects recorded"}),el("dd",{text:`${chs.length} (${chs.length-open.length} closed)`}),
       el("dt",{text:"Photos"}),el("dd",{text:String(ph.length)}),
@@ -1560,6 +1598,90 @@ function evLeave(){$("memberWin").prepend($("mvLeft"));}
 $("vmElem").onclick=()=>setMode("element");
 $("pToElem").onclick=()=>{const id=selected;evId=id;setMode("element");};
 
+/* ---------------- Inspection visits ----------------
+   One record per site visit (e.g. monthly): date, inspectors, what was covered (levels × member groups) and notes. Members in the
+   covered area count as looked at on that date, with no change unless something was entered. Records made while a visit is open
+   (inspections, defect observations, photos) carry its visitId and default to its date and inspectors.
+   A visit is kept in this browser while open and synced (visits/<id>.json) once it is ended, so the file is written once. */
+let visits=[];
+const activeVisit=()=>visits.find(v=>!v.endedAt)||null;
+const covers=(v,c)=>v.scope&&v.scope.levels.includes(c.level)&&v.scope.groups.includes(TYPES[c.type].group);
+function visitsFor(c){return visits.filter(v=>v.endedAt&&covers(v,c)).sort((a,b)=>String(b.date).localeCompare(String(a.date)));}
+const lastChangeMap=new Map();
+const lastChange=c=>lastChangeMap.get(c.id)||null;
+const lastVisitCache=new Map();
+function recomputeVisits(){lastVisitCache.clear();lastChangeMap.clear();
+  inspections.concat(defects).forEach(r=>{const d=String(r.date||"");if(d&&d>(lastChangeMap.get(r.componentId)||""))lastChangeMap.set(r.componentId,d);});const done=visits.filter(v=>v.endedAt).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  comps.forEach(c=>{const v=done.find(x=>covers(x,c));if(v)lastVisitCache.set(c.id,v);});}
+const todayIso=()=>{const t=new Date();return new Date(t.getTime()-t.getTimezoneOffset()*60000).toISOString().slice(0,10);};
+const recDate=()=>{const v=activeVisit();return v?v.date:todayIso();};
+const recInspector=()=>{const v=activeVisit();return v?v.inspectors:(lastInspector||"");};
+const daysSince=d=>d?Math.floor((Date.now()-new Date(d+"T12:00:00").getTime())/864e5):null;
+function scopeTxt(v){const L=v.scope.levels.slice().sort((a,b)=>a-b),G=v.scope.groups;
+  const lt=L.length===LEVELS.length?"All levels":L.length>1&&L[L.length-1]-L[0]===L.length-1?`Levels ${L[0]}–${L[L.length-1]}`:"Level"+(L.length>1?"s ":" ")+L.join(", ");
+  const all=GROUPS.filter(g=>!g.off).every(g=>G.includes(g.k));
+  return lt+" · "+(all&&G.length===GROUPS.filter(g=>!g.off).length?"all areas":all?"all areas incl. foundations":GROUPS.filter(g=>G.includes(g.k)).map(g=>g.label).join(", "));}
+function cleanVisit(j,id){
+  if(!j||typeof j!=="object")return null;const s=j.scope||{};
+  const levels=Array.isArray(s.levels)?s.levels.map(Number).filter(n=>LEVELS.some(L=>L.n===n)):[],groups=Array.isArray(s.groups)?s.groups.filter(k=>GROUPS.some(g=>g.k===k)):[];
+  if(!levels.length||!groups.length||!/^\d{4}-\d{2}-\d{2}$/.test(String(j.date)))return null;
+  return {id,date:String(j.date),inspectors:cleanStr(j.inspectors,160),scope:{levels,groups},notes:cleanStr(j.notes,2000),endNotes:cleanStr(j.endNotes,2000),startedAt:cleanStr(j.startedAt,30),endedAt:cleanStr(j.endedAt,30)||new Date().toISOString(),device:cleanStr(j.device,40),synced:true};
+}
+function visitCounts(v){const f=x=>x.visitId===v.id;return {insp:inspections.filter(f).length,def:defects.filter(f).length,ph:photos.filter(f).length};}
+function renderVisitBar(){
+  const v=activeVisit(),chip=$("visitChip"),btn=$("visitStart");
+  btn.hidden=!!v;chip.hidden=!v;
+  if(v){const k=visitCounts(v);$("visitTxt").textContent=`Visit ${fmtDate(v.date)} · ${scopeTxt(v)} · ${k.insp+k.def} record${k.insp+k.def===1?"":"s"}, ${k.ph} photo${k.ph===1?"":"s"}`;}
+  const done=visits.filter(x=>x.endedAt).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  $("visitCount").textContent=done.length?`${done.length} visit${done.length>1?"s":""} · last ${fmtDate(done[0].date)} (${daysSince(done[0].date)} days ago)`:"No visits recorded yet.";
+  const ul=$("visitList");ul.textContent="";
+  done.slice(0,6).forEach(x=>{const k=visitCounts(x);ul.append(el("li",null,el("span",{class:"vd",text:fmtDate(x.date)}),el("span",{class:"vt",text:`${scopeTxt(x)}${x.inspectors?" · "+x.inspectors:""} · ${k.insp+k.def?k.insp+k.def+" change"+(k.insp+k.def>1?"s":""):"no changes"}`})));});
+  if(done.length>6)ul.append(el("li",{class:"note",text:`and ${done.length-6} earlier (see the visit log export)`}));
+}
+function scopeBoxes(prefix,scope){
+  const lv=el("div",{class:"vchecks"}),gr=el("div",{class:"vchecks"});
+  LEVELS.forEach(L=>lv.append(el("label",null,el("input",Object.assign({type:"checkbox",value:String(L.n),id:prefix+"L"+L.n},!scope||scope.levels.includes(L.n)?{checked:""}:{})),L.name)));
+  GROUPS.forEach(g=>gr.append(el("label",null,el("input",Object.assign({type:"checkbox",value:g.k,id:prefix+"G"+g.k},(!scope&&!g.off)||(scope&&scope.groups.includes(g.k))?{checked:""}:{})),g.label)));
+  return {lv,gr,read:()=>({levels:[...lv.querySelectorAll("input:checked")].map(i=>+i.value),groups:[...gr.querySelectorAll("input:checked")].map(i=>i.value)})};
+}
+function openVisitDialog(){
+  const box=$("visitBox"),card=$("visitCard");card.textContent="";
+  const v=activeVisit();
+  if(!v){
+    const sb=scopeBoxes("vs",null),msg=el("p",{class:"err"});
+    const f=el("form",{class:"insp vform"},el("strong",{text:"Start an inspection visit"}),
+      el("p",{class:"note",style:"margin:0",text:"Members in the area you cover count as looked at on this date, with no change unless you record one. Anything you enter during the visit is stamped with it."}),
+      el("div",{class:"two"},el("label",null,"Date",el("input",{type:"date",id:"vDate",value:todayIso(),required:""})),el("label",null,"Inspector(s)",el("input",{type:"text",id:"vInsp",required:"",maxlength:"160",value:lastInspector||"",placeholder:"Names"}))),
+      el("fieldset",null,el("legend",{text:"Levels covered"}),sb.lv),el("fieldset",null,el("legend",{text:"Areas covered"}),sb.gr),
+      el("label",null,"Notes (weather, access, closures)",el("textarea",{id:"vNotes",maxlength:"2000"})),msg,
+      el("div",{class:"row"},el("button",{class:"btn primary",type:"submit",text:"Start visit"}),el("button",{class:"btn",type:"button",text:"Cancel",onclick:()=>{box.hidden=true;}})));
+    f.addEventListener("submit",async e=>{e.preventDefault();const sc=sb.read();if(!sc.levels.length||!sc.groups.length){msg.textContent="Choose at least one level and one area.";return;}
+      const doc={id:newId("visit"),date:f.querySelector("#vDate").value,inspectors:f.querySelector("#vInsp").value.trim(),scope:sc,notes:f.querySelector("#vNotes").value.trim(),startedAt:new Date().toISOString(),endedAt:null,synced:false};
+      lastInspector=doc.inspectors;await idbPut("visits",doc);visits.push(doc);box.hidden=true;recompute();});
+    card.append(f);
+  }else{
+    const k=visitCounts(v),sb=scopeBoxes("ve",v.scope),msg=el("p",{class:"err"});
+    const f=el("form",{class:"insp vform"},el("strong",{text:`End visit of ${fmtDate(v.date)}`}),
+      el("p",{class:"note",style:"margin:0",text:`Recorded during this visit: ${k.insp} inspection${k.insp===1?"":"s"}, ${k.def} defect observation${k.def===1?"":"s"}, ${k.ph} photo${k.ph===1?"":"s"}. Confirm what was actually covered; every member in it is logged as looked at on ${fmtDate(v.date)}.`}),
+      el("fieldset",null,el("legend",{text:"Levels covered"}),sb.lv),el("fieldset",null,el("legend",{text:"Areas covered"}),sb.gr),
+      el("label",null,"Closing notes",el("textarea",{id:"vEnd",maxlength:"2000"})),msg,
+      el("div",{class:"row"},el("button",{class:"btn primary",type:"submit",text:"End visit"}),el("button",{class:"btn",type:"button",text:"Keep visit open",onclick:()=>{box.hidden=true;}})),
+      el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Discard this visit",onclick:async()=>{if(k.insp+k.def+k.ph){msg.textContent="This visit already has records; end it instead.";return;}await idbDel("visits",v.id);visits=visits.filter(x=>x!==v);box.hidden=true;recompute();}})));
+    f.addEventListener("submit",async e=>{e.preventDefault();const sc=sb.read();if(!sc.levels.length||!sc.groups.length){msg.textContent="Choose at least one level and one area.";return;}
+      v.scope=sc;v.endNotes=f.querySelector("#vEnd").value.trim();v.endedAt=new Date().toISOString();v.synced=false;await idbPut("visits",v);box.hidden=true;recompute();scheduleSync();});
+    card.append(f);
+  }
+  box.hidden=false;
+}
+function visitCsv(){
+  const rows=[["VisitID","Date","Inspectors","Levels","Areas","MembersCovered","Inspections","DefectObservations","Photos","Notes","ClosingNotes"]];
+  visits.filter(v=>v.endedAt).sort((a,b)=>String(a.date).localeCompare(String(b.date))).forEach(v=>{const k=visitCounts(v);
+    rows.push([v.id,v.date,v.inspectors,v.scope.levels.join(" "),GROUPS.filter(g=>v.scope.groups.includes(g.k)).map(g=>g.label).join("; "),comps.filter(c=>covers(v,c)).length,k.insp,k.def,k.ph,v.notes,v.endNotes]);});
+  return toCsv(rows);
+}
+$("visitStart").onclick=openVisitDialog;$("visitEnd").onclick=openVisitDialog;
+$("visitBox").addEventListener("click",e=>{if(e.target.id==="visitBox")$("visitBox").hidden=true;});
+
 $("mvAdd").onclick=()=>mvSetPlacing(!mv.placing);
 $("mvAbove").onclick=()=>mvView("above");$("mvBelow").onclick=()=>mvView("below");
 $("mvNeigh").onchange=e=>{mv.neigh=e.target.checked;if(mv.neighGroup)mv.neighGroup.visible=mv.neigh;mv.needs=true;};
@@ -1589,6 +1711,7 @@ async function offer(name,text){
 $("expComp").onclick=()=>offer("Garage_Components.csv",compCsv());
 $("expInsp").onclick=()=>offer("Garage_Inspections.csv",inspCsv());
 $("expDef").onclick=()=>offer("Garage_Defects.csv",defCsv());
+$("expVisit").onclick=()=>offer("Garage_Visits.csv",visitCsv());
 $("csvClose").onclick=()=>{$("csvbox").hidden=true;};
 $("csvCopy").onclick=()=>{const t=$("csvText");navigator.clipboard.writeText(t.value).then(()=>{$("csvCopy").textContent="Copied";},()=>{t.select();});};
 
