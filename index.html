@@ -230,6 +230,7 @@ legend{font-size:12px;color:var(--muted);padding:0 4px}
 .vchip .dot{background:var(--good);animation:vpulse 2s infinite}
 .vchip .btn{padding:3px 10px}
 @keyframes vpulse{50%{opacity:.35}}
+.chip.demo{border-color:var(--fair);color:var(--fg);background:color-mix(in srgb,var(--fair) 18%,var(--surface))}
 .vlist{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:5px;font-size:12.5px}
 .vlist li{display:grid;grid-template-columns:auto 1fr;gap:8px}.vlist .vd{font-variant-numeric:tabular-nums;font-weight:500}.vlist .vt{color:var(--muted)}
 #csvbox{position:fixed;inset:0;background:rgba(8,12,16,.6);display:grid;place-items:center;z-index:50;padding:24px}
@@ -257,6 +258,7 @@ legend{font-size:12px;color:var(--muted);padding:0 4px}
 <div class="app">
   <header class="bar">
     <div class="brand"><h1 id="mName">Garage Asset Model</h1><span class="sub" id="mSub"></span></div>
+    <span class="chip demo" id="demoChip" hidden title="Made-up records for viewing only; remove them in the sidebar (Records & photos)">Demo data loaded</span>
     <span class="chip warn" title="Geometry built from the scanned 1980 drawings; several dimensions and locations are approximate (see About this model)">Model from drawings · verify</span>
     <button class="btn primary" type="button" id="visitStart">Start visit</button>
     <span class="chip vchip" id="visitChip" hidden><span class="dot"></span><span id="visitTxt"></span><button class="btn" type="button" id="visitEnd">End visit</button></span>
@@ -309,7 +311,10 @@ legend{font-size:12px;color:var(--muted);padding:0 4px}
       <p class="note" style="margin-top:0">Inspections and photos are saved in this browser first, so the app works with no signal. With GitHub sync on, they are copied to your private projects repository: one file per inspection, and each photo as a JPEG in a folder named after its component ID.</p>
       <div class="row" style="margin-top:8px">
         <button class="btn" type="button" id="syncNow" hidden>Sync now</button>
+        <button class="btn" type="button" id="demoLoad">Load demo data (25% of members)</button>
+        <button class="btn" type="button" id="demoRemove" hidden>Remove demo data</button>
       </div>
+      <p class="note" id="demoMsg">Demo data is made up, stays in this browser and is never uploaded; Remove demo data deletes all of it.</p>
       <p class="note" id="syncHelp">GitHub sync is off in this browser. Turn it on once in any tool's <b>Saved projects… → Cloud sync (GitHub)…</b> (steps in the All-Structural repository, docs/github-sync-setup.md), then reload this page.</p>
     </section>
     <section>
@@ -487,7 +492,7 @@ function recompute(){
     const p=latest.get(i.componentId);
     if(!p||String(i.date)>String(p.date)||(i.date===p.date&&String(i.createdAt||"")>String(p.createdAt||"")))latest.set(i.componentId,i);
   }
-  recomputeDefects();recomputeVisits();renderVisitBar();refreshAll();if(selected)mvPins();
+  recomputeDefects();recomputeVisits();renderVisitBar();renderDemoBtns();refreshAll();if(selected)mvPins();
 }
 function setSync(state,text){const s=$("sync");s.className="chip "+(state||"");$("syncText").textContent=text;}
 async function loadLocal(){inspections=await idbAll("inspections");photos=await idbAll("photos");defects=await idbAll("defects");visits=await idbAll("visits");recompute();}
@@ -531,11 +536,11 @@ async function syncNow(){
       const r=await c.put(`${ROOT}/inspections/${i.id}.json`,fileOf(Object.assign({},i,{device:s.device||""})),null,`Garage inspection ${i.componentId} ${i.date}`);
       if(r.ok||r.kind==="conflict"){i.synced=true;await idbPut("inspections",i);up++;}else{err=r.message;break;}
     }
-    if(!err)for(const v of visits.filter(x=>x.endedAt&&!x.synced)){
+    if(!err)for(const v of visits.filter(x=>x.endedAt&&!x.synced&&!x.example)){
       const r=await c.put(`${ROOT}/visits/${v.id}.json`,fileOf(Object.assign({},v,{device:s.device||""})),null,`Garage inspection visit ${v.date}`);
       if(r.ok||r.kind==="conflict"){v.synced=true;await idbPut("visits",v);up++;}else{err=r.message;break;}
     }
-    if(!err)for(const d of defects.filter(x=>!x.synced)){
+    if(!err)for(const d of defects.filter(x=>!x.synced&&!x.example)){
       const r=await c.put(`${ROOT}/defects/${d.id}.json`,fileOf(Object.assign({},d,{device:s.device||""})),null,`Garage defect ${d.componentId} ${d.date}`);
       if(r.ok||r.kind==="conflict"){d.synced=true;await idbPut("defects",d);up++;}else{err=r.message;break;}
     }
@@ -574,7 +579,7 @@ async function syncNow(){
 function showSyncState(up,down){
   if(!idb){setSync("warn","Browser storage unavailable · records are lost when the page closes");return;}
   if(!ghOn()){setSync("warn","Saved in this browser only · GitHub sync off");return;}
-  const s=ghSettings(),pend=inspections.filter(i=>!i.synced&&!i.example).length+defects.filter(d=>!d.synced).length+visits.filter(v=>v.endedAt&&!v.synced).length+photos.filter(p=>!p.synced&&!p.example).length;
+  const s=ghSettings(),pend=inspections.filter(i=>!i.synced&&!i.example).length+defects.filter(d=>!d.synced&&!d.example).length+visits.filter(v=>v.endedAt&&!v.synced&&!v.example).length+photos.filter(p=>!p.synced&&!p.example).length;
   setSync(pend?"warn":"ok",`GitHub ${s.owner}/${s.repo}`+(pend?` · ${pend} waiting to upload`:` · synced ${lastSync?lastSync.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}):""}`)+(up||down?` (${up} sent, ${down} received)`:""));
 }
 async function photoBlobUrl(p){
@@ -1282,7 +1287,8 @@ function gridRef(v,list,pos,neg,word){
   if(lo)return `${fmtFt(v-lo[1])} ${pos} of ${word} ${lo[0]}`;
   return `${fmtFt(s[0][1]-v)} ${neg} of ${word} ${s[0][0]}`;
 }
-function describeLoc(c,p,nW,local,nL){
+function describeLoc(c,p,nW,local,nL,box){
+  const B=box||mv.box;
   const gb=mv.mesh.geometry.boundingBox||(mv.mesh.geometry.computeBoundingBox(),mv.mesh.geometry.boundingBox);
   const ext=[gb.max.x-gb.min.x,gb.max.y-gb.min.y,gb.max.z-gb.min.z],ax=ext.indexOf(Math.max(...ext)),key="xyz"[ax];
   const axisW=new THREE.Vector3(ax===0?1:0,ax===1?1:0,ax===2?1:0).transformDirection(mv.mesh.matrixWorld);
@@ -1294,7 +1300,7 @@ function describeLoc(c,p,nW,local,nL){
   const vertical=Math.abs(axisW.y)>0.8;
   const parts=[gridRef(p.x,MODEL.grid.x,"east","west","grid"),gridRef(p.z,MODEL.grid.z,"north","south","line")];
   let alongTxt;
-  if(vertical)alongTxt=`${fmtFt(p.y-mv.box.min.y)} above the base`;
+  if(vertical)alongTxt=`${fmtFt(p.y-B.min.y)} above the base`;
   else{const end=axisW.x*(axisW.x>0?1:-1)>Math.abs(axisW.z)?(axisW.x>0?"west":"east"):(axisW.z>0?"south":"north");alongTxt=`${fmtFt(along)} from the ${end} end (of ${fmtFt(L)})`;}
   return {face,along:+along.toFixed(2),desc:`${parts.join(" · ")} · ${face} · ${alongTxt} · El. ${(p.y+MODEL.elev0).toFixed(1)}`};
 }
@@ -1681,6 +1687,102 @@ function visitCsv(){
 }
 $("visitStart").onclick=openVisitDialog;$("visitEnd").onclick=openVisitDialog;
 $("visitBox").addEventListener("click",e=>{if(e.target.id==="visitBox")$("visitBox").hidden=true;});
+
+/* ---------------- Demo data (this browser only, never uploaded) ----------------
+   "Load demo data" fills 25% of the members (foundations excluded) with made-up history so the views can be seen with data:
+   monthly visits Jan 2025 – Nov 2026, annual inspections 2022–2026 with NBI ratings, located defects with re-inspections and
+   condition-state growth, and drawn placeholder photos. Every record has example:true; "Remove demo data" deletes them all. */
+function rng(seed){return ()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
+function idbPutMany(store,arr){return new Promise((res,rej)=>{if(!idb||!arr.length)return res();const t=idb.transaction(store,"readwrite"),os=t.objectStore(store);arr.forEach(v=>os.put(v));t.oncomplete=()=>res();t.onerror=()=>rej(t.error);});}
+function idbDelMany(store,ids){return new Promise(res=>{if(!idb||!ids.length)return res();const t=idb.transaction(store,"readwrite"),os=t.objectStore(store);ids.forEach(id=>os.delete(id));t.oncomplete=()=>res();t.onerror=()=>res();});}
+function demoPhoto(r,kind,label){
+  const cv=document.createElement("canvas");cv.width=640;cv.height=480;const x=cv.getContext("2d");
+  const g=150+Math.floor(r()*40);x.fillStyle=`rgb(${g},${g-4},${g-10})`;x.fillRect(0,0,640,480);
+  for(let i=0;i<2500;i++){const v=g-40+Math.floor(r()*80);x.fillStyle=`rgba(${v},${v-3},${v-8},0.5)`;x.fillRect(r()*640,r()*480,2+r()*3,2+r()*3);}
+  if(/Crack/i.test(kind)){x.strokeStyle="rgba(30,30,30,.85)";x.lineWidth=2+r()*2;x.beginPath();let px=40+r()*80,py=60+r()*120;x.moveTo(px,py);for(let i=0;i<14;i++){px+=30+r()*20;py+=(r()-0.45)*45;x.lineTo(px,py);}x.stroke();}
+  else{x.fillStyle="rgba(90,84,76,.95)";x.beginPath();const cx=320+(r()-0.5)*120,cy=240+(r()-0.5)*80,R=60+r()*70;for(let i=0;i<=20;i++){const a=i/20*Math.PI*2,rr=R*(0.7+r()*0.5);i?x.lineTo(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr*0.7):x.moveTo(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr*0.7);}x.fill();
+    x.strokeStyle="rgba(150,70,30,.9)";x.lineWidth=5;for(let i=0;i<3;i++){x.beginPath();x.moveTo(cx-R*0.8,cy-20+i*20);x.lineTo(cx+R*0.8,cy-20+i*20+(r()-0.5)*10);x.stroke();}}
+  x.fillStyle="rgba(0,0,0,.55)";x.fillRect(0,438,640,42);x.fillStyle="#fff";x.font="600 18px system-ui, sans-serif";x.fillText("DEMO PHOTO · "+label,14,465);
+  return new Promise(res=>cv.toBlob(b=>res(b),"image/jpeg",0.72));
+}
+function surfacePoint(m,r){
+  const pos=m.geometry.attributes.position,n=pos.count/3,a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3();
+  let best=null,tot=0;const areas=[];
+  for(let i=0;i<n;i++){a.fromBufferAttribute(pos,i*3);b.fromBufferAttribute(pos,i*3+1);c.fromBufferAttribute(pos,i*3+2);const ar=new THREE.Vector3().subVectors(b,a).cross(new THREE.Vector3().subVectors(c,a)).length()/2;tot+=ar;areas.push(tot);}
+  const pick=r()*tot;let i=areas.findIndex(v=>v>=pick);if(i<0)i=n-1;
+  a.fromBufferAttribute(pos,i*3);b.fromBufferAttribute(pos,i*3+1);c.fromBufferAttribute(pos,i*3+2);
+  let u=r(),v=r();if(u+v>1){u=1-u;v=1-v;}
+  const local=a.clone().add(new THREE.Vector3().subVectors(b,a).multiplyScalar(u)).add(new THREE.Vector3().subVectors(c,a).multiplyScalar(v));
+  const nL=new THREE.Vector3().subVectors(b,a).cross(new THREE.Vector3().subVectors(c,a)).normalize();
+  const world=local.clone().applyMatrix4(m.matrixWorld),nW=nL.clone().transformDirection(m.matrixWorld).normalize();
+  return {local,nL,world,nW};
+}
+async function loadDemo(progress){
+  const r=rng(20261126),today=todayIso();
+  const pick=comps.filter(c=>TYPES[c.type].group!=="FDN").filter(()=>r()<0.25);
+  // monthly visits, Jan 2025 – this month
+  const V=[],allG=GROUPS.filter(g=>!g.off).map(g=>g.k),allL=LEVELS.map(L=>L.n);
+  for(let y=2025,mo=0;;mo++){if(mo>11){mo=0;y++;}const d=`${y}-${String(mo+1).padStart(2,"0")}-15`;if(d>today)break;
+    const part=r()<0.2;V.push({id:`demo-v-${d}`,date:d,inspectors:["M. Field","J. Ruiz","A. Lee"][Math.floor(r()*3)]+(r()<0.5?", J. Ruiz":""),scope:{levels:part?[3,4,5]:allL,groups:allG},notes:part?"Lower levels closed for sweeping.":"",endNotes:"",startedAt:d,endedAt:d+"T16:00:00Z",example:true,synced:true});}
+  const INSP=["2022-10-14","2023-10-13","2024-10-15","2025-10-15","2026-10-15"].filter(d=>d<=today);
+  const visitOn=d=>V.find(v=>v.date===d);
+  const I=[],D=[],P=[];let photoBudget=180;
+  for(let k=0;k<pick.length;k++){
+    const c=pick[k],m=meshes.get(c.id);if(!m)continue;m.updateMatrixWorld(true);
+    const dates=INSP.filter(()=>r()<0.75);if(!dates.length)dates.push(INSP[INSP.length-1]);
+    const obsDates=[...new Set(dates.concat(V.filter(()=>r()<0.06).map(v=>v.date)))].sort();
+    const nDef=r()<0.42?0:r()<0.6?1:r()<0.75?2:3,chains=[];
+    const types=defectsFor(c);
+    for(let j=0;j<nDef;j++){
+      const type=types[Math.floor(r()*Math.min(types.length,r()<0.7?3:types.length))],start=Math.floor(r()*obsDates.length);
+      const sp=surfacePoint(m,r),pseudo={g:c.g};
+      const mvSave=mv.mesh;mv.mesh=m;const where=describeLoc(pseudo,sp.world,sp.nW,sp.local,sp.nL,new THREE.Box3().setFromObject(m));mv.mesh=mvSave;
+      const loc={lx:+sp.local.x.toFixed(3),ly:+sp.local.y.toFixed(3),lz:+sp.local.z.toFixed(3),nx:+sp.nW.x.toFixed(3),ny:+sp.nW.y.toFixed(3),nz:+sp.nW.z.toFixed(3),desc:where.desc,face:where.face,along:where.along};
+      const crack=/Crack/i.test(type);let cs=1+Math.floor(r()*2.2),len=crack?12+Math.round(r()*60):4+Math.round(r()*16),wid=crack?null:3+Math.round(r()*10),dep=crack?null:+(0.5+r()*1.5).toFixed(1),cw=crack?+(0.01+r()*0.03).toFixed(2):null;
+      const root=`demo-d-${c.id}-${j}`;let prev=null,closed=false;const chain=[];
+      obsDates.slice(start).forEach((d,i)=>{
+        if(closed)return;if(i>0&&r()<0.35)return;
+        let status="New";
+        if(i>0){const q=r();if(q<0.08&&cs<=2){status="Repaired";closed=true;}else if(q<0.45){status="Grown";cs=Math.min(4,cs+(r()<0.6?1:0));len=Math.round(len*(1.15+r()*0.3));if(cw!=null)cw=+(cw+0.01).toFixed(2);if(dep!=null)dep=+(dep+0.3).toFixed(1);}else status="Unchanged";}
+        const id=i===0?root:`${root}-${i}`;const v=visitOn(d);
+        const o={id,rootId:root,prevId:prev,componentId:c.id,date:d,inspector:v?v.inspectors:"M. Field",type,cs:status==="Repaired"?1:cs,status,len,wid,dep,crack:cw,location:loc,
+          notes:status==="Grown"?"Larger than last inspection.":status==="Repaired"?"Patched; repair sound.":"",createdAt:d+"T12:0"+i,example:true,synced:true,visitId:v?v.id:null};
+        D.push(o);chain.push(o);prev=id;
+      });
+      chains.push(chain);
+    }
+    // inspections: NBI from a base rating minus the worst open defect at that date
+    const base=7+(r()<0.35?1:0)-(r()<0.2?1:0);let last=null;
+    dates.forEach(d=>{let worst=0;chains.forEach(ch=>{let s=null;ch.forEach(o=>{if(o.date<=d)s=o;});if(s&&s.status!=="Repaired")worst=Math.max(worst,s.cs);});
+      let rt=base-({0:0,1:0,2:1,3:2,4:3})[worst]-(r()<0.15?1:0);if(last!=null)rt=Math.min(rt,last+(r()<0.1?1:0));rt=Math.max(2,Math.min(9,rt));last=rt;
+      const v=visitOn(d),open=[...new Set(chains.flatMap(ch=>{let s=null;ch.forEach(o=>{if(o.date<=d)s=o;});return s&&s.status!=="Repaired"?[s.type]:[];}))];
+      I.push({id:`demo-i-${c.id}-${d}`,componentId:c.id,level:c.level,type:c.type,date:d,inspector:v?v.inspectors:"M. Field",rating:rt,defects:open,notes:open.length?`${open.join(", ")} noted; see defect pins.`:"No significant defects.",
+        action:rt>=7?"None":rt===6?"Monitor":rt===5?"Routine maintenance":rt===4?"Repair within 1–2 years":"Priority repair",createdAt:d+"T11",example:true,synced:true,visitId:v?v.id:null});});
+    if(k%60===0)progress(`Building demo records… ${Math.round(k/pick.length*100)}%`);
+  }
+  // placeholder photos for some defect observations (CS3/CS4 first)
+  const forPhotos=D.slice().sort((a,b)=>b.cs-a.cs).filter((o,i)=>o.cs>=3||i%7===0).slice(0,photoBudget);
+  const blobs=[];
+  for(let i=0;i<forPhotos.length;i++){const o=forPhotos[i];const pid=`demo-p-${o.id}`;const ch=D.filter(x=>x.rootId===o.rootId);
+    const num=1+[...new Set(D.filter(x=>x.componentId===o.componentId).map(x=>x.rootId))].sort().indexOf(o.rootId);
+    blobs.push({id:pid,blob:await demoPhoto(r,o.type,`${o.componentId} · ${o.type} · ${o.date}`)});
+    P.push({id:pid,componentId:o.componentId,defectId:o.id,inspectionId:null,caption:`${o.type} (demo)`,date:o.date,createdAt:o.date+"T13",example:true,synced:true,hasBlob:true,visitId:o.visitId});
+    if(i%20===0)progress(`Drawing demo photos… ${i} of ${forPhotos.length}`);}
+  progress("Saving…");
+  await idbPutMany("visits",V);await idbPutMany("inspections",I);await idbPutMany("defects",D);await idbPutMany("blobs",blobs);await idbPutMany("photos",P);
+  await loadLocal();
+  return `Demo data loaded: ${pick.length} members, ${V.length} visits, ${I.length} inspections, ${D.length} defect observations, ${P.length} photos.`;
+}
+async function removeDemo(){
+  const del=async(store,arr)=>idbDelMany(store,arr.filter(x=>x.example).map(x=>x.id));
+  await del("visits",visits);await del("inspections",inspections);await del("defects",defects);
+  const ph=photos.filter(p=>p.example);await idbDelMany("blobs",ph.map(p=>p.id));await idbDelMany("photos",ph.map(p=>p.id));
+  ph.forEach(p=>{const u=blobUrls.get(p.id);if(u){URL.revokeObjectURL(u);blobUrls.delete(p.id);}});
+  await loadLocal();
+}
+function renderDemoBtns(){const has=inspections.some(i=>i.example)||defects.some(d=>d.example)||visits.some(v=>v.example);$("demoLoad").hidden=has;$("demoRemove").hidden=!has;$("demoChip").hidden=!has;}
+$("demoLoad").onclick=async()=>{const b=$("demoLoad");b.disabled=true;$("demoMsg").textContent=await loadDemo(t=>$("demoMsg").textContent=t);b.disabled=false;renderDemoBtns();};
+$("demoRemove").onclick=async()=>{$("demoMsg").textContent="Removing demo data…";await removeDemo();$("demoMsg").textContent="Demo data removed. Your own records were not touched.";renderDemoBtns();};
 
 $("mvAdd").onclick=()=>mvSetPlacing(!mv.placing);
 $("mvAbove").onclick=()=>mvView("above");$("mvBelow").onclick=()=>mvView("below");
