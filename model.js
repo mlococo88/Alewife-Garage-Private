@@ -17,15 +17,15 @@
    - Light well: bay 5–6, C–J on Level 2, B–J on Levels 3–5.
    - Steel columns W14, upper / lower tier per S148 (transcribed from the scan; verify); splice at Level 3.
    - Precast: double tees about 9 ft wide (S174), precast beams PB (S152), edge girders / spandrels GB (S176).
-   - Drum ramps: two double-helix drums (S114–S125). Exit drum (Ramps C and D) centred 72 ft west of line A; entrance drum
-     (Ramps A and B) on grid R, assumed 153 ft east of line K. Outer radius 61 ft, inner edge 36 ft, 16 columns C1–C16 (24 in
-     round, S149). Each ramp makes two turns from the ground to Level 5. Approximate geometry.
-   - Bridge to the entrance drum on lines 11.5–12, Levels 3–5, on piers (S162).
+   - Drum ramps: two double-helix drums (S114–S125), exit drum (Ramps C and D) on grid A1 (72 ft west of A), entrance drum
+     (Ramps A and B) on grid R (K–L 4, then 36 ft bays L–M–N–P–Q, Q–R 72 ft). Outer radius 61 ft, tangent to line 12; inner edge
+     36 ft; 16 columns C1–C16 (24 in round, S149). One ramp per drum reaches Levels 2 and 4, the other Levels 3 and 5.
+   - Links along lines 11.5–12 to each drum at Levels 2–5; the entrance bridge on 42 in columns at M, N, P, Q (S118, S162).
    - Lobby / mezzanine (S126–S131), flood storage tank (S132, S133, S163, S164) and bus platform (S104, S136, S137): simplified
      blocks at approximate locations, to be refined from those sheets. */
 (function () {
   'use strict';
-  const X = { A: 0, B: 45, C: 81, D: 117, E: 135, F: 171, G: 207, H: 243, J: 279, K: 324, L: 328 };
+  const X = { A1: -72, A: 0, B: 45, C: 81, D: 117, E: 135, F: 171, G: 207, H: 243, J: 279, K: 324, L: 328, M: 364, N: 400, P: 436, Q: 472, R: 544 };
   const XO = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K'];
   const Z = { '1': 0, '1.9': 60.33, '2': 63, '2.1': 65.67, '2.9': 123.33, '3': 126, '3.1': 128.67, '4': 189, '5': 252, '6': 288, '7': 351,
     '8': 414, '9': 477, '10': 540, '11': 603, '11.5': 620, '12': 638.25 };
@@ -68,14 +68,15 @@
       BUS: { name: 'Bus platform slab', group: 'OTHER', material: 'concrete', color: 0xb8b3a2 }
     },
     grid: {
-      x: XO.map(k => [k, X[k]]).concat([['A1', -72], ['R', 477]]),
+      x: ['A1'].concat(XO).concat(['M', 'N', 'P', 'Q', 'R']).map(k => [k, X[k]]),
       z: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'].map(k => [k, Z[k]])
     },
     assumptions: [
       'Level elevations: Level 1 El. 117.5 (S104), Level 2 El. 131.0 (S175 SR-7), then 10 ft floor to floor (engineer, 2026-11-26). Approximate.',
       'Column sizes from the S148 schedule, transcribed from the scanned sheet: verify against the drawing.',
       'Internal ramp: bay 2.1–2.9 slopes from line B (level n) up to line K (level n+1), from the "ramp up / ramp down" notes on S106–S113.',
-      'Drum ramps: two double-helix drums with outer radius 61 ft and inner edge 36 ft; each ramp makes two turns from the ground to Level 5. The entrance drum is assumed 153 ft east of line K.',
+      'Drum ramps: double helix, outer radius 61 ft (S120, S124), inner edge 36 ft, centred on grid A1 (72 ft west of A) and grid R (216 ft east of L), tangent to line 12. One ramp of each drum reaches Levels 2 and 4, the other Levels 3 and 5. Ramp elevations between levels are interpolated.',
+      'Links: straight bridges along lines 11.5–12 join each drum to the garage at Levels 2–5; the entrance bridge rests on 42 in columns on grids M, N, P and Q (S118, S162).',
       'Lobby / mezzanine, flood storage tank and bus platform are simplified blocks at approximate locations.'
     ],
     members: []
@@ -220,63 +221,77 @@
     if (n <= 4) teesInBay(n, '2.1', '2.9', '2-3R', { include: (a) => a !== 'A', ramp: true });
   }
 
-  /* ---------- drum ramps (double helix) ---------- */
+  /* ---------- drum ramps (double helix) and their links ----------
+     S114–S125: each drum is centred on its own grid line (A1, 72 ft west of A; R, 216 ft east of L) with its outer edge tangent to
+     line 12 (centre 61 ft north of line 12). Ramps leave the drum at that tangent point and run straight along lines 11.5–12 to the
+     garage. One ramp of each drum serves Levels 2 and 4, the other Levels 3 and 5; both start at grade. */
+  const R_IN = 36, R_OUT = 61, R_COL = 37.5, SEG = 16;
+  const ZC = Z['12'] - R_OUT, TH0 = Math.PI / 2;          // tangent point (on line 12) is at angle 90 degrees
   const DRUMS = [
-    { code: 'XR', name: 'Exit drum (Ramps C and D)', cx: -72, cz: 579, threads: ['C', 'D'], sheets: 'S120–S125' },
-    { code: 'NR', name: 'Entrance drum (Ramps A and B)', cx: 477, cz: 578, threads: ['A', 'B'], sheets: 'S114–S119' }
+    { code: 'XR', name: 'Exit drum (Ramps C and D)', cx: X.A1, cz: ZC, dir: 1, sheets: 'S120–S125',
+      threads: [{ k: 'D', lv: [2, 4] }, { k: 'C', lv: [3, 5] }] },
+    { code: 'NR', name: 'Entrance drum (Ramps A and B)', cx: X.R, cz: ZC, dir: -1, sheets: 'S114–S119',
+      threads: [{ k: 'B', lv: [2, 4] }, { k: 'A', lv: [3, 5] }] }
   ];
-  const R_IN = 36, R_OUT = 61, R_COL = 37.5, SEG = 16, TURNS = 2;
   const levelOf = y => { let n = 1; [1, 2, 3, 4, 5].forEach(k => { if (y >= LEV[k] - 0.01) n = k; }); return n; };
   DRUMS.forEach(D => {
     const pt = (r, th, y) => [D.cx + r * Math.cos(th), y, D.cz + r * Math.sin(th)];
-    D.threads.forEach((th0, ti) => {
-      const start = ti * Math.PI;
-      const nseg = SEG * TURNS, dTh = 2 * Math.PI / SEG, rise = LEV[5] / nseg;
-      for (let s = 0; s < nseg; s++) {
-        const a0 = start + s * dTh, a1 = a0 + dTh, y0 = s * rise, y1 = (s + 1) * rise;
+    // each drum turns so that its ramps meet the tangent point heading toward the garage (exit drum east, entrance drum west)
+    const sgn = D.dir;
+    D.threads.forEach(T => {
+      const ys = [0].concat(T.lv.map(n => LEV[n]));            // elevation at the tangent point after each full turn
+      for (let turn = 0; turn < T.lv.length; turn++) for (let s = 0; s < SEG; s++) {
+        const k = turn * SEG + s;
+        const a0 = TH0 - sgn * s * 2 * Math.PI / SEG, a1 = TH0 - sgn * (s + 1) * 2 * Math.PI / SEG;
+        const y0 = ys[turn] + (ys[turn + 1] - ys[turn]) * s / SEG, y1 = ys[turn] + (ys[turn + 1] - ys[turn]) * (s + 1) / SEG;
         const lv = levelOf((y0 + y1) / 2);
-        add({ id: `${D.code}-${th0}-S${String(s + 1).padStart(2, '0')}`, type: 'HS', level: lv, grid: `${D.name}, ramp ${th0}, segment ${s + 1} of ${nseg}`, size: '8 in slab',
-          props: [['Location', `${D.name}, Ramp ${th0}, segment ${s + 1} of ${nseg} (${(s * 22.5) % 360}° to ${((s + 1) * 22.5) % 360 || 360}°, turn ${Math.floor(s / SEG) + 1})`],
-            ['Elevation', `${elTxt(y0)} to ${elTxt(y1)}`], ['Section', '8 in cast-in-place slab on radial beams (S115–S125)'], ['Width', ft(R_OUT - R_IN)], ['Source', D.sheets + '; geometry approximate']],
+        add({ id: `${D.code}-${T.k}-S${String(k + 1).padStart(2, '0')}`, type: 'HS', level: lv, grid: `${D.name}, ramp ${T.k}`, size: '8 in slab',
+          props: [['Location', `${D.name}, Ramp ${T.k}, segment ${k + 1} of ${SEG * T.lv.length} (turn ${turn + 1}: grade or Level ${turn ? T.lv[turn - 1] : 1} up to Level ${T.lv[turn]})`],
+            ['Elevation', `${elTxt(y0)} to ${elTxt(y1)}`], ['Section', '8 in cast-in-place slab on radial beams (S115–S125)'], ['Width', ft(R_OUT - R_IN)], ['Source', D.sheets + '; elevations interpolated']],
           g: { k: 'quad', p: [pt(R_IN, a0, y0), pt(R_OUT, a0, y0), pt(R_OUT, a1, y1), pt(R_IN, a1, y1)], t: 0.67 } });
-        if (s % 2 === 0) add({ id: `${D.code}-${th0}-RB${String(s / 2 + 1).padStart(2, '0')}`, type: 'RB', level: lv, grid: `${D.name}, ramp ${th0}`, size: 'Radial beam',
-          props: [['Location', `${D.name}, Ramp ${th0}, radial beam ${s / 2 + 1} at ${(s * 22.5) % 360}°`], ['Elevation', elTxt(y0)], ['Section', 'Cast-in-place radial beam, about 16 in × 36 in (S160)'], ['Source', D.sheets]],
+        add({ id: `${D.code}-${T.k}-W${String(k + 1).padStart(2, '0')}`, type: 'RW', level: lv, grid: `${D.name}, ramp ${T.k}`, size: 'Parapet',
+          props: [['Location', `${D.name}, Ramp ${T.k}, outer parapet wall at segment ${k + 1}`], ['Section', 'Cast-in-place wall, 12 in, parapet 3′-6″ above the ramp (RP-8, S161)'], ['Source', 'S160, S161']],
+          g: { k: 'quad', p: [pt(R_OUT + 0.5, a0, y0 + 3.5), pt(R_OUT + 0.5, a1, y1 + 3.5), pt(R_OUT + 0.5, a1, y1 - 0.67), pt(R_OUT + 0.5, a0, y0 - 0.67)], t: 1.0 } });
+        if (s % 2 === 0) add({ id: `${D.code}-${T.k}-RB${String(k / 2 + 1).padStart(2, '0')}`, type: 'RB', level: lv, grid: `${D.name}, ramp ${T.k}`, size: 'Radial beam',
+          props: [['Location', `${D.name}, Ramp ${T.k}, radial beam ${k / 2 + 1}`], ['Elevation', elTxt(y0)], ['Section', 'Cast-in-place radial beam, about 16 in × 36 in (S160)'], ['Source', D.sheets]],
           g: { k: 'bar', a: pt(R_COL, a0, y0), b: pt(R_OUT, a0, y0), sec: { s: 'rect', w: 1.33, d: 3.0 } } });
       }
     });
-    // columns C1–C16 (8 inner ring, 8 outer at the wall), each story
+    // columns C1–C16: 8 on the inner ring, 8 at the outer wall, one segment per story
     for (let c = 0; c < 16; c++) {
-      const inner = c < 8, th = (c % 8) * Math.PI / 4, r = inner ? R_COL : R_OUT - 0.5;
+      const inner = c < 8, th = (c % 8) * Math.PI / 4 + Math.PI / 8, r = inner ? R_COL : R_OUT - 0.5;
       for (let n = 1; n <= 4; n++) add({ id: `${D.code}-L${n}-C${String(c + 1).padStart(2, '0')}`, type: 'RC', level: n, grid: `${D.name}, column C${c + 1}`, size: '24 in round',
         props: [['Location', `${D.name}, column C-${c + 1} (${inner ? 'inner ring' : 'outer wall'}), Level ${n} to Level ${n + 1}`], ['Section', '24 in diameter, reinforcement per S149 (8-#7 to 16-#9)'], ['Source', 'S149, ' + D.sheets]],
         g: { k: 'bar', a: pt(r, th, LEV[n]), b: pt(r, th, LEV[n + 1]), sec: { s: 'round', dia: 2.0 } } });
     }
-    // outer wall: 16 segments per story
-    for (let n = 1; n <= 5; n++) for (let s = 0; s < SEG; s++) {
-      const a0 = s * 2 * Math.PI / SEG, a1 = a0 + 2 * Math.PI / SEG, yb = LEV[n], yt = n === 5 ? LEV[5] + 4 : LEV[n + 1];
-      add({ id: `${D.code}-W-L${n}-${String(s + 1).padStart(2, '0')}`, type: 'RW', level: n, grid: `${D.name}, outer wall`, size: '12 in wall',
-        props: [['Location', `${D.name}, outer wall panel ${s + 1} of 16, ${n === 5 ? 'parapet above Level 5' : `Level ${n} to Level ${n + 1}`}`], ['Section', '12 in cast-in-place wall (RP-8, S161)'], ['Source', 'S160, S161']],
-        g: { k: 'quad', p: [pt(R_OUT + 0.5, a0, yt), pt(R_OUT + 0.5, a1, yt), pt(R_OUT + 0.5, a1, yb), pt(R_OUT + 0.5, a0, yb)], t: 1.0 } });
-    }
   });
-  // bridge between line L and the entrance drum, Levels 3–5 (S162)
-  const BX0 = X.L, BX1 = 477 - R_OUT, NB = 4, bw = (BX1 - BX0) / NB;
-  for (let n = 3; n <= 5; n++) for (let i = 0; i < NB; i++) {
-    const x0 = BX0 + i * bw, x1 = x0 + bw;
-    add({ id: `BR-L${n}-S${i + 1}`, type: 'BS', level: n, grid: `Bridge, lines 11.5–12, span ${i + 1}`, size: 'CIP slab',
-      props: [['Location', `Bridge to the entrance drum, Level ${n}, span ${i + 1} of ${NB}`], ['Section', 'Cast-in-place slab on beams along lines 11.5 and 12 (S162 RP-19)'], ['Span', ft(bw)], ['Source', 'S162; approximate']],
-      g: { k: 'quad', p: [[x0, LEV[n], Z['11.5']], [x1, LEV[n], Z['11.5']], [x1, LEV[n], Z['12']], [x0, LEV[n], Z['12']]], t: 0.75 } });
-    ['11.5', '12'].forEach(line => add({ id: `BR-L${n}-B${line}-${i + 1}`, type: 'BB', level: n, grid: `Bridge, line ${line}`, size: 'CIP beam',
-      props: [['Location', `Bridge, Level ${n}, beam on line ${line}, span ${i + 1}`], ['Source', 'S162; approximate']],
-      g: { k: 'bar', a: [x0, LEV[n], Z[line]], b: [x1, LEV[n], Z[line]], sec: { s: 'rect', w: 1.5, d: 3.0 } } }));
-  }
-  for (let i = 1; i < NB; i++) ['11.5', '12'].forEach(line => add({ id: `BR-P${i}-${line}`, type: 'BP', level: 1, grid: `Bridge pier, line ${line}`, size: line === '12' ? '3′-6″ pier' : '4′-0″ pier',
-    props: [['Location', `Bridge pier ${i} on line ${line}, ground to Level 3`], ['Section', (line === '12' ? '3′-6″' : '4′-0″') + ' wide concrete pier on footing (S162 RP-19)'], ['Source', 'S162; approximate']],
-    g: { k: 'bar', a: [BX0 + i * bw, 0, Z[line]], b: [BX0 + i * bw, LEV[3] - 3, Z[line]], sec: { s: 'rect', w: line === '12' ? 3.5 : 4, d: 2.5, center: true } } }));
-  // short connections from the exit drum to line A, Levels 3–5
-  for (let n = 3; n <= 5; n++) add({ id: `XR-L${n}-LINK`, type: 'BS', level: n, grid: 'Exit drum link to line A', size: 'CIP slab',
-    props: [['Location', `Link slab from the exit drum to the garage at line A, Level ${n}`], ['Source', 'S120–S123; approximate']],
-    g: { k: 'quad', p: [[-14, LEV[n], Z['11']], [0, LEV[n], Z['11']], [0, LEV[n], Z['12']], [-14, LEV[n], Z['12']]], t: 0.75 } });
+
+  /* links along lines 11.5–12 between each drum's tangent point and the garage, Levels 2–5 (S116–S118, S122–S125, S162) */
+  const LINKS = [
+    { code: 'XL', name: 'Exit link (exit drum to line A)', x0: X.A1, x1: X.A, piers: [], sheets: 'S122–S125' },
+    { code: 'BR', name: 'Entrance bridge (line L to the entrance drum)', x0: X.L, x1: X.R, piers: ['M', 'N', 'P', 'Q'], sheets: 'S116–S118, S162' }
+  ];
+  LINKS.forEach(Lk => {
+    const stops = [Lk.x0].concat(Lk.piers.map(p => X[p])).concat([Lk.x1]).sort((a, b) => a - b);
+    const names = ['A1', 'A', 'L', 'M', 'N', 'P', 'Q', 'R'], nameOf = x => names.find(k => Math.abs(X[k] - x) < 0.01) || '';
+    for (let n = 2; n <= 5; n++) for (let i = 0; i < stops.length - 1; i++) {
+      const xa = stops[i], xb = stops[i + 1], sp = `${nameOf(xa)}–${nameOf(xb)}`;
+      add({ id: `${Lk.code}-L${n}-S-${nameOf(xa)}${nameOf(xb)}`, type: 'BS', level: n, grid: `${Lk.name}, ${sp}`, size: '8 in slab',
+        props: [['Location', `${Lk.name}, Level ${n}, ${sp}, between lines 11.5 and 12`], ['Section', 'Cast-in-place slab on beams along lines 11.5 and 12 (RP-19, S162)'], ['Span', ft(xb - xa)], ['Source', Lk.sheets]],
+        g: { k: 'quad', p: [[xa, LEV[n], Z['11.5']], [xb, LEV[n], Z['11.5']], [xb, LEV[n], Z['12']], [xa, LEV[n], Z['12']]], t: 0.67 } });
+      ['11.5', '12'].forEach(line => add({ id: `${Lk.code}-L${n}-B${line}-${nameOf(xa)}${nameOf(xb)}`, type: 'BB', level: n, grid: `${Lk.name}, line ${line}`, size: 'CIP beam',
+        props: [['Location', `${Lk.name}, Level ${n}, beam on line ${line}, ${sp}`], ['Section', 'Cast-in-place beam (42×144 / 30×105 per plan marks)'], ['Span', ft(xb - xa)], ['Source', Lk.sheets]],
+        g: { k: 'bar', a: [xa, LEV[n], Z[line]], b: [xb, LEV[n], Z[line]], sec: { s: 'rect', w: 1.5, d: 3.5 } } }));
+    }
+    Lk.piers.forEach(p => ['11.5', '12'].forEach(line => { for (let n = 1; n <= 4; n++) add({ id: `${Lk.code}-L${n}-P-${p}${line}`, type: 'BP', level: n, grid: `${Lk.name}, grid ${p}-${line}`, size: '42 in round',
+      props: [['Location', `${Lk.name}, column on grid ${p}-${line}, Level ${n} to Level ${n + 1}`], ['Section', '42 in diameter concrete column (S118, S162)'], ['Source', Lk.sheets]],
+      g: { k: 'bar', a: [X[p], LEV[n], Z[line]], b: [X[p], LEV[n + 1] - 3.5, Z[line]], sec: { s: 'round', dia: 3.5 } } }); }));
+  });
+  // grade approach from the exit drum to the street, between lines 11 and 12 (S121)
+  [['A1A', X.A1, X.A], ['AB', X.A, X.B], ['BC', X.B, X.C], ['CD', X.C, X.D], ['DE', X.D, X.E]].forEach(([k, xa, xb]) =>
+    add({ id: `XG-${k}`, type: 'BS', level: 1, grid: 'Exit ramp approach at grade', size: '5 in slab on grade',
+      props: [['Location', `Exit ramps C and D approach at grade, between lines 11 and 12, ${k.replace(/^(A1|[A-K])/, '$1–')}`], ['Section', '5 in slab on grade (S121, S124)'], ['Source', 'S121, S124; simplified']],
+      g: { k: 'quad', p: [[xa, 0.3, Z['11']], [xb, 0.3, Z['11']], [xb, 0.3, Z['12']], [xa, 0.3, Z['12']]], t: 0.42 } }));
 
   /* ---------- lobby / mezzanine, flood storage tank, bus platform (simplified) ---------- */
   const yM = 101 - EL0;   // mezzanine slab on grade El. 101.0 (S126)
