@@ -17,16 +17,10 @@ Download the repository (Code → Download ZIP, or clone it) and double-click `i
 ## Where inspections and photos go
 Saved in the browser first (IndexedDB `garageAsset.alewife.v1`), then, with Cloud sync set up in that browser, copied to the private projects repository under `garage-assets/alewife/`: one JSON file per inspection, photos as JPEG in a folder per component ID.
 
-## Model content
-- Garage block: steel W14 columns (S148), precast beams PB on the numbered lines (S152), edge girders / spandrels GB, the cast-in-place girder on line 12 at Level 3 (S153), precast double tees (S174), the sloped ramp bay 2.1–2.9, the light well 5–6.
-- Two double-helix drum ramps: exit (Ramps C and D) west of line A, entrance (Ramps A and B) east of line K (S114–S125, S149, S160, S161), and the links joining each drum to the garage at Levels 3–5: the entrance bridge with its bump-out to line 11.2, deep beams under Level 3 and 18 ft transverse beams at Levels 4–5 (S116–S119, S162).
-- Light well skylight over bay 5–6, A to J (S138): W18 beams on lines 5 and 6, W18×71 on line A, box beams BB1–BB4, column extensions with bearings, glazing.
-- Lobby / mezzanine, flood storage tank and bus platform as simplified blocks.
+## Model content (rebuilt 2026-11-26 from a review of all 79 sheets; 4,005 members)
+- Garage: W14 columns per S148 (corrected cells, splice 5 ft above L2, base types), precast beams with S106–S113 marks and S152 4 ft section, skewed PB-6 beams, double tees T1–T4 with S174 depths, internal ramps B→J with J–K landings, light-well girders, line 12 girder (12 ft deep) and its concrete columns, spandrels and parapets, Part Plan A corners.
+- Drums: double helix at about 24 ft per turn from the sheet elevations, inner spandrel beams, 8 inner columns per drum, continuous 10 in outer wall, pile caps and tie beams, grade legs, sloped links at Levels 3–5, entrance bridge with bump-out, walls and S149 columns, exit lanes.
+- Skylight (S138), stairs #20, #24–#27, #29, #31, lobby (mezzanine, concourse beams, tower, Escalator 9, roof trusses, pedestrian bridge), flood storage tank (roof beams FSB, columns, walls), South Ramp and managers area, bus canopy trusses and joists, transfer girders, piers, pile caps and tie beams (Foundations group, off by default).
 
-## Assumptions to verify (also shown in the app, "About this model")
-- Level elevations: L1 El. 117.5 (S104), L3 El. 148.0 (S116), L5 El. 172.0 (S117), 12 ft floor to floor; L2 El. 136.0 by extension (verify).
-- Column sizes transcribed from the scanned S148 schedule.
-- Ramp bay slope direction (rises from line B to line K) read from the "ramp up / ramp down" notes.
-- Drum geometry: outer radius 61 ft, inner edge 36 ft, on grids A1 and R, tangent to line 12; ramp elevations between levels interpolated.
-- Lobby, tank and bus platform locations and extents.
-- Skylight bearing elevation (assumed 12 ft above Level 5; not on S138).
+## Assumptions to verify
+See "About this model" in the app. Main items: drum ramp elevations interpolated between the leader readings; lobby roof truss layout simplified; exit legs and lanes approximate; tank outline along the tunnel approximate; lobby foundation walls MF-1–MF-47 and stairs 16, 23, 30 not modelled.

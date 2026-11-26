@@ -323,6 +323,7 @@ const DEFECTS_BY_MAT={
   steel:["Corrosion / section loss","Coating failure","Loose or missing bolts","Weld cracking","Base plate / anchor corrosion","Vehicle impact damage","Fire-proofing / encasement damage"],
   precast:["Exposed strand","Ledge / dap cracking","Bearing pad distress","Connector / weld plate failure","Joint sealant failure","Stem cracking at bearing","Topping wear / ponding"],
   concrete:["Scaling","Leakage through cracks","Bearing distress","Joint failure","Vehicle impact damage","Wall movement"],
+  masonry:["Cracked or displaced units","Mortar deterioration","Bearing / lintel distress","Water staining","Bulging or out of plumb"],
   glass:["Cracked or broken glazing","Failed seals / gaskets","Leaks at gutters","Gutter corrosion or blockage","Loose or missing caps / fasteners","Debris on glazing"]};
 const defectsFor=c=>{const mt=TYPES[c.type].material;return (mt==="steel"||mt==="glass"?[]:DEFECTS_COMMON).concat(DEFECTS_BY_MAT[mt]||[]);};
 const ACTIONS=["None","Monitor","Routine maintenance","Repair within 1–2 years","Priority repair","Immediate action (shore / restrict)"];
@@ -493,6 +494,17 @@ function boxesGeo(boxes){
         w {d,bf} wide flange, round {dia}.
    quad {p:[4 points], t}: a slab or wall panel, p are the four corners of one face, thickness t toward the inside. */
 const geoCache=new Map();
+/* open-web truss along local x: top and bottom chords, verticals, alternating diagonals (Warren with posts) */
+function trussGeo(L,d,panel,t){
+  const n=Math.max(1,Math.round(L/panel)),p=L/n,pos=[],nor=[];
+  const put=g=>{const q=g.toNonIndexed();pos.push(...q.attributes.position.array);nor.push(...q.attributes.normal.array);q.dispose();g.dispose();};
+  const box=(x0,x1,y0,y1)=>{const g=new THREE.BoxGeometry(x1-x0,y1-y0,t);g.translate((x0+x1)/2,(y0+y1)/2,0);put(g);};
+  box(0,L,-t,0);box(0,L,-d,-d+t);
+  for(let i=0;i<=n;i++)box(i*p-t/2,i*p+t/2,-d+t,-t);
+  for(let i=0;i<n;i++){const len=Math.hypot(p,d-2*t),g=new THREE.BoxGeometry(len,t*0.8,t*0.8);g.rotateZ((i%2?1:-1)*Math.atan2(d-2*t,p));g.translate(i*p+p/2,-d/2,0);put(g);}
+  const out=new THREE.BufferGeometry();out.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));out.setAttribute("normal",new THREE.Float32BufferAttribute(nor,3));
+  out.computeBoundingBox();out.computeBoundingSphere();return out;
+}
 function barGeo(L,sec,centred){
   const key=JSON.stringify(sec)+"|"+L.toFixed(2)+"|"+centred;
   if(geoCache.has(key))return geoCache.get(key);
@@ -504,6 +516,7 @@ function barGeo(L,sec,centred){
   else if(sec.s==="it"){const[a,b]=V(sec.d);g=boxesGeo([[0,L,a,b,-sec.w/2,sec.w/2],[0,L,a,a+sec.ld,-sec.w/2-sec.lw,-sec.w/2],[0,L,a,a+sec.ld,sec.w/2,sec.w/2+sec.lw]]);}
   else if(sec.s==="dt"){const w=sec.w,d=sec.d,tf=sec.tf,sw=Math.min(0.6,w*0.07),so=w/4;
     g=boxesGeo([[0,L,-tf,0,-w/2,w/2],[0,L,-d,-tf,-so-sw/2,-so+sw/2],[0,L,-d,-tf,so-sw/2,so+sw/2]]);}
+  else if(sec.s==="truss"){g=trussGeo(L,sec.d,sec.panel||8,sec.t||0.4);}
   else{const[a,b]=V(sec.d);g=boxesGeo([[0,L,a,b,-sec.w/2,sec.w/2]]);}
   const v={g,edges:new THREE.EdgesGeometry(g,20)};geoCache.set(key,v);return v;
 }
@@ -582,7 +595,7 @@ function buildBubbles(){
 
 /* ---------------- View state ---------------- */
 let level="all", mode="3d", colorBy="cond", selected=null;
-const show={};GROUPS.forEach(g=>show[g.k]=true);
+const show={};GROUPS.forEach(g=>show[g.k]=!g.off);
 let pickables=[];
 function inScope(c){return level==="all"||c.level===level;}
 function applyStyle(){
@@ -801,7 +814,7 @@ $("vmTable").onclick=()=>setMode("table");
 $("resetView").onclick=resetView;
 $("cbType").onclick=()=>{colorBy="type";$("cbType").setAttribute("aria-pressed","true");$("cbCond").setAttribute("aria-pressed","false");refreshAll();};
 $("cbCond").onclick=()=>{colorBy="cond";$("cbCond").setAttribute("aria-pressed","true");$("cbType").setAttribute("aria-pressed","false");refreshAll();};
-GROUPS.forEach(g=>{const id="sh"+g.k;$("showBox").append(el("label",null,el("input",{type:"checkbox",id,checked:""}),el("span",{class:"swatch",style:`background:#${g.color.toString(16).padStart(6,"0")}`}),g.label));
+GROUPS.forEach(g=>{const id="sh"+g.k;$("showBox").append(el("label",null,el("input",g.off?{type:"checkbox",id}:{type:"checkbox",id,checked:""}),el("span",{class:"swatch",style:`background:#${g.color.toString(16).padStart(6,"0")}`}),g.label));
   $(id).addEventListener("change",e=>{show[g.k]=e.target.checked;refreshAll();});});
 const dl=$("idlist");for(const c of comps)dl.append(el("option",{value:c.id}));
 $("findForm").addEventListener("submit",e=>{e.preventDefault();const v=$("findInput").value.trim().toUpperCase();
