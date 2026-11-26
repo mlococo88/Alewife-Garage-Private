@@ -849,8 +849,8 @@ function resetView(){
    rotation (degrees clockwise from north of the model's "up" direction in plan, i.e. −z). Defaults are a first guess;
    "Align photo" lets the user move and rotate it; the result is kept in this browser and shown so it can be built in. */
 const AER_URL="https://tiles.arcgis.com/tiles/hGdibHYSPO59RG1h/arcgis/rest/services/orthos2023/MapServer/tile/";
-const GEO_DEFAULT={lat:42.39605,lon:-71.14212,rot:0};
-const GEO_KEY="garageAsset."+PROJECT+".geo";
+const GEO_DEFAULT={lat:42.3950635,lon:-71.1409432,rot:159.2};   // fitted to the 2023 orthos (outline, both drums, skylight)
+const GEO_KEY="garageAsset."+PROJECT+".geo.v2";   // v2: fitted default (older guesses ignored)
 let geo=Object.assign({},GEO_DEFAULT);
 try{const g=JSON.parse(localStorage.getItem(GEO_KEY)||"null");if(g&&isFinite(g.lat)&&isFinite(g.lon)&&isFinite(g.rot))geo=g;}catch(e){}
 const aer={mesh:null,tex:null,ok:0,fail:0,on:true};
