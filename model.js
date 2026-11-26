@@ -44,6 +44,7 @@
       { k: 'BEAM', label: 'Beams & girders', color: 0x7d8896 },
       { k: 'DECK', label: 'Double tees', color: 0xc8ccd2 },
       { k: 'RAMP', label: 'Drum ramps & bridge', color: 0xb9b2a4 },
+      { k: 'SKY', label: 'Light well skylight', color: 0x7fb3d5 },
       { k: 'OTHER', label: 'Lobby, tank, bus platform', color: 0xa9b7a6 }
     ],
     types: {
@@ -61,6 +62,10 @@
       BS: { name: 'Bridge slab', group: 'RAMP', material: 'concrete', color: 0xc9c2b4 },
       BB: { name: 'Bridge beam', group: 'RAMP', material: 'concrete', color: 0xa69d8f },
       BP: { name: 'Bridge pier', group: 'RAMP', material: 'concrete', color: 0x9a9182 },
+      SKP: { name: 'Skylight support', group: 'SKY', material: 'steel', color: 0x6f7a88 },
+      SKB: { name: 'Skylight beam (W18)', group: 'SKY', material: 'steel', color: 0x5f6f82 },
+      SKX: { name: 'Skylight box beam', group: 'SKY', material: 'steel', color: 0x4f6f8f },
+      GL: { name: 'Skylight glazing', group: 'SKY', material: 'glass', color: 0x9fd0ea },
       LS: { name: 'Lobby / mezzanine slab', group: 'OTHER', material: 'concrete', color: 0xa9b7a6 },
       LW: { name: 'Lobby wall', group: 'OTHER', material: 'concrete', color: 0x98a796 },
       TS: { name: 'Flood storage tank slab', group: 'OTHER', material: 'concrete', color: 0x9fb2b8 },
@@ -77,6 +82,7 @@
       'Internal ramp: bay 2.1–2.9 slopes from line B (level n) up to line K (level n+1), from the "ramp up / ramp down" notes on S106–S113.',
       'Drum ramps: double helix, outer radius 61 ft (S120, S124), inner edge 36 ft, centred on grid A1 (72 ft west of A) and grid R (216 ft east of L), tangent to line 12. Ramps A and C reach Levels 3 and 5; Ramps B and D reach Level 4 in two turns. Ramp elevations between levels are interpolated.',
       'Links to the drums at Levels 3, 4 and 5 only. Entrance bridge: bump-out to line 11.2 between M and P, Level 3 on 12 ft deep beams, Levels 4–5 on 18 × 36 in beams at 18 ft (S116–S119). Entrance bridge columns on line 12 above Level 3 are assumed.',
+      'Light well skylight (S138): bearing elevation not on the sheet, assumed 12 ft above Level 5; glazing shape simplified.',
       'Lobby / mezzanine, flood storage tank and bus platform are simplified blocks at approximate locations.'
     ],
     members: []
@@ -355,6 +361,48 @@
     add({ id: `XG-${k}`, type: 'BS', level: 1, grid: 'Exit ramp approach at grade', size: '5 in slab on grade',
       props: [['Location', `Exit ramps C and D approach at grade, between lines 11 and 12, ${k.replace(/^(A1|[A-K])/, '$1–')}`], ['Section', '5 in slab on grade (S121, S124)'], ['Source', 'S121, S124; simplified']],
       g: { k: 'quad', p: [[xa, 0.3, Z['11']], [xb, 0.3, Z['11']], [xb, 0.3, Z['12']], [xa, 0.3, Z['12']]], t: 0.42 } }));
+
+  /* ---------- light well skylight over bay 5–6, A to J (S138) ----------
+     W18 beams on lines 5 and 6 bearing on the column tops (bearing plate schedule A-5 … J-6; slide bearings except D5, E5),
+     a W18×71 on line A at the elevator tower, box beams BB1–BB4 spanning 5–6 carrying the glazing gutters, glass between.
+     Bearing elevation not given on S138: assumed 12 ft above Level 5 (El. 184.0), verify against the architectural sections. */
+  const SKY_Y = LEV[5] + 12, SKX = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J'];
+  const W5 = { AB: 'W18×71', BC: 'W18×65' }, W6 = { AB: 'W18×71', BC: 'W18×65', HJ: 'W18×140 (as read; verify)' };
+  SKX.forEach(g => ['5', '6'].forEach(line => add({ id: `SK-POST-${g}${line}`, type: 'SKP', level: 5, grid: `Skylight support ${g}-${line}`, size: 'Column extension',
+    props: [['Location', `Skylight support on grid ${g}-${line}, from Level 5 up to the skylight bearing`], ['Bearing', g === 'D' && line === '5' || g === 'E' && line === '5' ? 'Fixed (non-shrink grout, S138)' : 'Slide bearing, PTFE on neoprene (S138)'],
+      ['Plate', 'Bearing plate ¾ in × 12 in × 1′-2″ (S138 schedule)'], ['Height', ft(SKY_Y - LEV[5]) + ' above Level 5 (assumed)'], ['Source', 'S138']],
+    g: { k: 'bar', a: [X[g], LEV[5], Z[line]], b: [X[g], SKY_Y - 1.5, Z[line]], sec: { s: 'round', dia: 2.0 } } })));
+  for (let i = 0; i < SKX.length - 1; i++) {
+    const a = SKX[i], b = SKX[i + 1], bay = a + b;
+    ['5', '6'].forEach(line => {
+      const sz = (line === '5' ? W5 : W6)[bay] || 'W18×60';
+      add({ id: `SK-W${line}-${bay}`, type: 'SKB', level: 5, grid: `Skylight, line ${line}, ${a}–${b}`, size: sz.split(' ')[0],
+        props: [['Location', `Skylight beam on line ${line}, ${a} to ${b}`], ['Section', sz], ['Span', ft(X[b] - X[a])], ['Elevation', elTxt(SKY_Y) + ' top (assumed)'], ['Source', 'S138']],
+        g: { k: 'bar', a: [X[a], SKY_Y, Z[line]], b: [X[b], SKY_Y, Z[line]], sec: { s: 'w', d: 1.5, bf: 0.63 } } });
+    });
+  }
+  add({ id: 'SK-WA-56', type: 'SKB', level: 5, grid: 'Skylight, line A, 5–6', size: 'W18×71',
+    props: [['Location', 'Skylight beam on line A, 5 to 6, at the edge of the elevator tower (3 in gap)'], ['Section', 'W18×71'], ['Span', ft(Z['6'] - Z['5'])], ['Source', 'S138']],
+    g: { k: 'bar', a: [X.A, SKY_Y, Z['5']], b: [X.A, SKY_Y, Z['6']], sec: { s: 'w', d: 1.5, bf: 0.63 } } });
+  // box beams: BB1, BB2 in A–B; BB3 at each grid line and mid-bay B to J; BB4 at J
+  const BB = [['BB1', X.A + 15], ['BB2', X.A + 30]];
+  ['B', 'C', 'D', 'E', 'F', 'G', 'H'].forEach((g, i, arr) => { BB.push(['BB3', X[g]]); const nx = X[arr[i + 1] || 'J']; if (nx - X[g] > 20) BB.push(['BB3', (X[g] + nx) / 2]); });
+  BB.push(['BB4', X.J]);
+  const BBS = { BB1: '12 × 15 in, tf ¾, tw ½', BB2: '12 × 15 in, tf ½, tw ⁵⁄₁₆ (camber ½ in)', BB3: '12 × 15 in, tf ⅜, tw ¼ (camber ½ in)', BB4: '15 × 15 in, tf ⅜, tw ⅜' };
+  BB.forEach(([mk, x], i) => add({ id: `SK-${mk}-${String(i + 1).padStart(2, '0')}`, type: 'SKX', level: 5, grid: `Skylight box beam ${i + 1}`, size: mk,
+    props: [['Location', `Skylight box beam ${i + 1} of ${BB.length}, ${ft(x)} east of line A, spanning line 5 to line 6, with glazing gutters`], ['Section', `${mk}: steel box ${BBS[mk]} (S138 schedule)`], ['Span', ft(Z['6'] - Z['5'])], ['Source', 'S138']],
+    g: { k: 'bar', a: [x, SKY_Y, Z['5']], b: [x, SKY_Y, Z['6']], sec: { s: 'rect', w: mk === 'BB4' ? 1.25 : 1.0, d: 1.25 } } }));
+  // glazing between box beams (pitched to the gutters)
+  const xs = [X.A].concat(BB.map(q => q[1]));
+  for (let i = 0; i < xs.length - 1; i++) {
+    const xa = xs[i] + 0.5, xb = xs[i + 1] - 0.5, xm = (xa + xb) / 2, rise = 2.5;
+    add({ id: `SK-GL-${String(i + 1).padStart(2, '0')}`, type: 'GL', level: 5, grid: `Skylight glazing bay ${i + 1}`, size: 'Glazing',
+      props: [['Location', `Skylight glazing between box beams ${i} and ${i + 1} (${ft(xa)} to ${ft(xb)} east of line A), line 5 to line 6`], ['System', 'Skylight by manufacturer; profile per architectural drawings (S138 note)'], ['Source', 'S138; shape simplified']],
+      g: { k: 'quad', p: [[xa, SKY_Y + 1.25, Z['5']], [xm, SKY_Y + 1.25 + rise, Z['5']], [xm, SKY_Y + 1.25 + rise, Z['6']], [xa, SKY_Y + 1.25, Z['6']]], t: 0.1 } });
+    add({ id: `SK-GL-${String(i + 1).padStart(2, '0')}B`, type: 'GL', level: 5, grid: `Skylight glazing bay ${i + 1}`, size: 'Glazing',
+      props: [['Location', `Skylight glazing between box beams ${i} and ${i + 1}, second slope`], ['System', 'Skylight by manufacturer (S138 note)'], ['Source', 'S138; shape simplified']],
+      g: { k: 'quad', p: [[xm, SKY_Y + 1.25 + rise, Z['5']], [xb, SKY_Y + 1.25, Z['5']], [xb, SKY_Y + 1.25, Z['6']], [xm, SKY_Y + 1.25 + rise, Z['6']]], t: 0.1 } });
+  }
 
   /* ---------- lobby / mezzanine, flood storage tank, bus platform (simplified) ---------- */
   const yM = 101 - EL0;   // mezzanine slab on grade El. 101.0 (S126)

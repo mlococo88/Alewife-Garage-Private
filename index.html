@@ -322,8 +322,9 @@ const DEFECTS_COMMON=["Cracking","Spalling","Delamination","Exposed reinforcemen
 const DEFECTS_BY_MAT={
   steel:["Corrosion / section loss","Coating failure","Loose or missing bolts","Weld cracking","Base plate / anchor corrosion","Vehicle impact damage","Fire-proofing / encasement damage"],
   precast:["Exposed strand","Ledge / dap cracking","Bearing pad distress","Connector / weld plate failure","Joint sealant failure","Stem cracking at bearing","Topping wear / ponding"],
-  concrete:["Scaling","Leakage through cracks","Bearing distress","Joint failure","Vehicle impact damage","Wall movement"]};
-const defectsFor=c=>{const mt=TYPES[c.type].material;return (mt==="steel"?[]:DEFECTS_COMMON).concat(DEFECTS_BY_MAT[mt]||[]);};
+  concrete:["Scaling","Leakage through cracks","Bearing distress","Joint failure","Vehicle impact damage","Wall movement"],
+  glass:["Cracked or broken glazing","Failed seals / gaskets","Leaks at gutters","Gutter corrosion or blockage","Loose or missing caps / fasteners","Debris on glazing"]};
+const defectsFor=c=>{const mt=TYPES[c.type].material;return (mt==="steel"||mt==="glass"?[]:DEFECTS_COMMON).concat(DEFECTS_BY_MAT[mt]||[]);};
 const ACTIONS=["None","Monitor","Routine maintenance","Repair within 1–2 years","Priority repair","Immediate action (shore / restrict)"];
 
 /* ---------------- Data: this browser (IndexedDB) + optional GitHub sync ----------------
