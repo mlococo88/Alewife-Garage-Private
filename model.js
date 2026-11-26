@@ -353,14 +353,16 @@
         pt(R_COL, th, D.capY), pt(R_COL, th + 45, D.capY), { s: 'rect', w: 1.5, d: 1.5 });
     });
     const linkSide = D.dir === 1 ? [101.25, 123.75] : [78.75, 56.25];
-    const legSide = D.code === 'NR' ? [348.75, 11.25, 213.75, 236.25] : [303.75, 326.25];
+    // grade-leg entries: one 22.5° sector on the side the leg arrives from (Ramp A at the east point, Ramp B at the north-west,
+    // exit Ramps C and D at the north-east); the opening runs from grade up to the first ramp above it
+    const legSide = D.code === 'NR' ? [348.75, 213.75] : [326.25];
     for (let s = 0; s < SEG; s++) {
       const a0 = s * 22.5, a1 = a0 + 22.5, mid = a0 + 11.25, ps = passes(D, mid);
       const lv = [D.capY + 1.5].concat(ps), top = ps[ps.length - 1] + 4;
       for (let j = 0; j < lv.length; j++) {
         const yb = lv[j], yt = j + 1 < lv.length ? lv[j + 1] : top;
         if (linkSide.includes(mid) && yb > 20) continue;
-        if (legSide.includes(mid) && j === 1) continue;
+        if (legSide.includes(mid) && j === 0) continue;
         quad(`${D.code}-W${P2(s + 1)}-${j + 1}`, 'RW', levelOf(yb + 0.5), `${D.name}, outer wall`, '10 in wall',
           [['Location', `${D.name}, outer wall, sector ${s + 1} of 16 (${a0}° to ${a1}°), ${elTxt(yb)} to ${elTxt(yt)}${j + 1 === lv.length ? ' (parapet)' : ''}`],
             ['Section', '10 in CIP wall, continuous from a 3′-0″ × 1′-6″ strip footing on the pile caps (RP-8 / RP-9, S161)'], ['Source', 'S161, ' + D.sheets]],
